@@ -435,6 +435,7 @@ namespace ants_colony_2
                     Console.WriteLine($"детей: {queen.queenKids.Count}\n");
                 }
             }
+            // fsdfds
             // основной код
             for (int day = 1; day <= Global.DRY_TIME; day++)
             {
