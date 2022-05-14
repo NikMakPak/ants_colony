@@ -74,29 +74,35 @@ namespace ants_colony_2
         }
         public void addAntToColony(string antType)
         {
-            List<Warrior> ants_Warrior = Global.getAntsExamples_Warrior(colony.color);
-            List<Worker> ants_Worker = Global.getAntsExamples_Worker(colony.color);
+            List<Warrior> ants_Warrior = Global.getAntsExamples_Warrior((name.Length > 8) ? name.Split('_')[0] : name);
+            List<Worker> ants_Worker = Global.getAntsExamples_Worker((name.Length > 8) ? name.Split('_')[0] : name);
             switch (antType)
             {
                 case "Warrior":
                     //Console.WriteLine(" воин");
-                    colony.warriors.Add(ants_Warrior[rand.Next(0, ants_Warrior.Count)]);
+                    colony.warriors.Add(ants_Warrior[rand.Next(ants_Warrior.Count)]);
                     break;
                 case "Worker":
                     //Console.WriteLine(" рабочий");
-                    colony.workers.Add(ants_Worker[rand.Next(0, ants_Worker.Count)]);
+                    colony.workers.Add(ants_Worker[rand.Next(ants_Worker.Count)]);
                     break;
                 case "Queen":
                     QueenDoughter qKid = Global.genDoughter(colony.queen, $"{name}_дочь_{queenKids.Count+1}");
-                    if (rand.Next(0, 1000) >= 750)
+                    
+                    if (rand.Next(1000) >= 750)
                     {
                         qKid.isLost = true;
                     }
                     else
                     {
+                        Console.WriteLine("-------------------");
+                        Colony c = Global.genColony("", qKid, 12, 9, colony.special);
+                        Console.WriteLine(qKid.colony);
+                        c.Info();
+                        c.Population();
+                        Console.WriteLine("-------------------");
                         queenKids.Add(qKid);
                     }
-                    //Console.WriteLine("в main проверка на islost и создание новой колонии...");
                     break;
             }
         }
@@ -105,13 +111,13 @@ namespace ants_colony_2
             string[] antsExample = {"Worker", "Warrior","Queen"};
             for (int i = 0; i < larvaeNumber; i++)
             {
-                string antType = antsExample[rand.Next(0, 3)];
+                string antType = antsExample[rand.Next(3)];
                 if (antType == "Queen" && queenKids.Count < queensLimit)
                 {
                     addAntToColony(antType);
                 }
                 else {
-                    antType = antsExample[rand.Next(0, 2)];
+                    antType = antsExample[rand.Next(2)];
                     addAntToColony(antType); 
                 }
             }
@@ -137,8 +143,8 @@ namespace ants_colony_2
             string[] antsExample = { "Worker", "Warrior" };
             for (int i = 0; i < larvaeNumber; i++)
             {
-                string antType = antsExample[rand.Next(0, 2)];
-                addAntToColony(antType);
+                string antType = antsExample[rand.Next(2)];
+                addAntToColony(antsExample[rand.Next(2)]);
             }
             genLarvae();
         }
@@ -148,12 +154,21 @@ namespace ants_colony_2
     {
         public int number;
         public int[] stackResources;
+        //public List<Colony> coloniesOnStack = new List<Colony> { };
 
         public Stack(int number, int[] stackResources)
         {
             this.number = number;
             this.stackResources = stackResources;
         }
+
+        //public void antsInfo()
+        //{
+        //    foreach (var colony in coloniesOnStack)
+        //    {
+        //        Console.WriteLine($"-----\nколония {colony.color} сидит на куче {number}");
+        //    }
+        //}
 
         public void About()
         {
@@ -181,7 +196,7 @@ namespace ants_colony_2
         public override void About()
         {
             base.About();
-            Console.WriteLine("Имя:567890");
+            Console.WriteLine("Имя: в разработке..");
         }
     }
     class Warrior : Insect
@@ -250,7 +265,7 @@ namespace ants_colony_2
             List<Worker> workers = new List<Worker>();
             for (int j = 0; j < count; j++)
             {
-                workers.Add(antExamples[rand.Next(0, 2)]);
+                workers.Add(antExamples[rand.Next(2)]);
             }
             return workers;
 
@@ -261,7 +276,7 @@ namespace ants_colony_2
             List<Warrior> warriors = new List<Warrior>();
             for (int j = 0; j < count; j++)
             {
-                warriors.Add(antExamples[rand.Next(0, 2)]);
+                warriors.Add(antExamples[rand.Next(2)]);
             }
 
             return warriors;
@@ -293,13 +308,13 @@ namespace ants_colony_2
     }
     class Global
     {
-        static public string[] colonyColors = {"синие", "белые", "желтые", "фиолетовые", "оранжевые", "голубые","черные"};
+        static public List<String> colonyColors = new List<string> {"синие", "белые", "желтые", "фиолетовые", "оранжевые", "голубые","черные","салатовые", "пурпурные" , "коричневые", "золотые"};
         static public int DRY_TIME = 12;
         static public List<Colony> colonies = new List<Colony>{};
         static public Random rand = new Random(DateTime.Now.Millisecond);
-        static public List<Worker> getAntsExamples_Worker(string colonyColor)
+        static public List<Worker> getAntsExamples_Worker(string qName)
         {
-            if (colonyColor == "зеленые")
+            if (qName == "Феодора")
             {
                 return new List<Worker>()
                 {
@@ -314,9 +329,9 @@ namespace ants_colony_2
             };
         }
 
-        static public List<Warrior> getAntsExamples_Warrior(string colonyColor)
+        static public List<Warrior> getAntsExamples_Warrior(string qName)
         {
-            if (colonyColor == "зеленые")
+            if (qName == "Феодора")
             {
                 return new List<Warrior>()
                 {
@@ -339,7 +354,9 @@ namespace ants_colony_2
 
         static public Colony genColony(string color, Queen queen, int count_R, int count_W, Insect special)
         {
-            Colony colony = new Colony((color == "") ? colonyColors[rand.Next(0, colonyColors.Length)] : color, queen, count_R, count_W, special, new Dictionary<string, int>() {
+            string chosenColor = colonyColors[rand.Next(colonyColors.Count)];
+            colonyColors.Remove(chosenColor);
+            Colony colony = new Colony((color == "") ? chosenColor : color, queen, count_R, count_W, special, new Dictionary<string, int>() {
                 { "В", 0 },
                 { "Л", 0 },
                 { "Р", 0 },
@@ -414,7 +431,7 @@ namespace ants_colony_2
             void larvaeGrowth(Queen queen, int day)
             {
                 foreach (var qKid in queen.queenKids)
-                {
+                 {
                     if (day % (qKid.growthCycle + 1) == 0) { qKid.genAnt(); }
                 }
 
@@ -422,35 +439,26 @@ namespace ants_colony_2
                 {
                     Console.WriteLine(queen.name);
                     queen.genAnt();
-                    if (queen.queenKids.Count != 0)
-                    {
-                        Console.WriteLine("-------------------");
-                        QueenDoughter qKid = queen.queenKids[queen.queenKids.Count - 1];
-                        Colony name = Global.genColony("", qKid, 12, 9, queen.colony.special);
-                        Console.WriteLine(qKid.colony);
-                        name.Info();
-                        name.Population();
-                        Console.WriteLine("-------------------");
-                    }
-                    Console.WriteLine($"детей: {queen.queenKids.Count}\n");
                 }
+
+                
             }
-            // fsdfds
             // основной код
             for (int day = 1; day <= Global.DRY_TIME; day++)
             {
+                Console.WriteLine($"\nдень - {day}");
                 foreach (var colony in Global.colonies.GetRange(0,2))
                 {
-                    Console.WriteLine(day);
                     larvaeGrowth(colony.queen, day);
                 }
-                
+                Console.WriteLine("\n\n");
                 //screen1(day);
                 //screen2();
             }
             foreach (var colony in Global.colonies)
             {
-                //Console.WriteLine(colony.color);
+                Console.WriteLine(colony.queen.name);
+                Console.WriteLine(colony.color);
                 colony.Population();
             }
             Console.WriteLine(" пришла засуха! ");
