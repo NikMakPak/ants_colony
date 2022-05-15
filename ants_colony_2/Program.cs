@@ -13,19 +13,15 @@ namespace ants_colony_2
      * камушек - К
      * листик  - Л
      */
-    //??????????????????????????????????????????????????
-
 
     //TODO:
     // понять как добавить всем муравьям привязку к королеве и к колонии
-    //    =----> добавить королеву каждому муравью и выходить на колонию через нее
+        //  = добавить королеву каждому муравью и выходить на колонию через нее
 
     // продолжить реазицию вывода информации экранов
 
-    // изменить все названя функций с большую буквы на маленькой
-
-    // поправить текущую реализацию личинок
     // перейти к реализации походов и муравьиных скилов
+        // см 450
     abstract class Insect
     {
         public int hp, def, dmg;
@@ -41,7 +37,7 @@ namespace ants_colony_2
             this.dmg = dmg;
         }
 
-        public virtual void About()
+        public virtual void about()
         {
             Console.WriteLine($"\n==========={GetType().Name}===========");
             Console.WriteLine($"здоровье = {hp}, защита = {def}, урон = {dmg}");
@@ -63,9 +59,9 @@ namespace ants_colony_2
             genLarvae();
         }
 
-        public override void About()
+        public override void about()
         {
-            base.About();
+            base.about();
             Console.WriteLine($"Имя: {name}");
         }
         public void genLarvae()
@@ -98,8 +94,8 @@ namespace ants_colony_2
                         Console.WriteLine("-------------------");
                         Colony c = Global.genColony("", qKid, 12, 9, colony.special);
                         Console.WriteLine(qKid.colony);
-                        c.Info();
-                        c.Population();
+                        c.info();
+                        c.population();
                         Console.WriteLine("-------------------");
                         queenKids.Add(qKid);
                     }
@@ -150,38 +146,8 @@ namespace ants_colony_2
         }
     }
     
-    class Stack
-    {
-        public int number;
-        public int[] stackResources;
-        //public List<Colony> coloniesOnStack = new List<Colony> { };
-
-        public Stack(int number, int[] stackResources)
-        {
-            this.number = number;
-            this.stackResources = stackResources;
-        }
-
-        //public void antsInfo()
-        //{
-        //    foreach (var colony in coloniesOnStack)
-        //    {
-        //        Console.WriteLine($"-----\nколония {colony.color} сидит на куче {number}");
-        //    }
-        //}
-
-        public void About()
-        {
-            if (stackResources.Sum() >0)
-            {
-                Console.WriteLine($"Куча { number}: " + (stackResources[0] == 0 ? "" : $"веточка: {stackResources[0]}; ") + (stackResources[1] == 0 ? "" : $"камушек: {stackResources[1]}; ") + (stackResources[2] == 0 ? "" : $"росинка: {stackResources[2]};"));
-            }
-            else
-            {
-                Console.WriteLine($"Куча {number} пуста");
-            }
-        }
-    }
+    
+    
     class Worker : Insect
     {
         public string[] takeElems;
@@ -193,9 +159,9 @@ namespace ants_colony_2
             this.dmg = 0;   
             this.countElems = countElems;
         }
-        public override void About()
+        public override void about()
         {
-            base.About();
+            base.about();
             Console.WriteLine("Имя: в разработке..");
         }
     }
@@ -239,6 +205,70 @@ namespace ants_colony_2
         // атакует своих вместо врагов; по пути в колонию может уснуть и вернуться на след
 
     }
+
+    class Stack
+    {
+        public int number;
+        public int[] stackResources;
+        public List<HikingGroup> groupsOnStack = new List<HikingGroup> { };
+
+        public Stack(int number, int[] stackResources)
+        {
+            this.number = number;
+            this.stackResources = stackResources;
+        }
+
+        public void antsInfo()
+        {
+            foreach (var group in groupsOnStack)
+            {
+                Console.WriteLine($"-----\nколония {group.color} сидит на куче {number}");
+            }
+        }
+
+        public void about()
+        {
+            if (stackResources.Sum() > 0)
+            {
+                Console.WriteLine($"Куча { number}: " + (stackResources[0] == 0 ? "" : $"веточка: {stackResources[0]}; ") + (stackResources[1] == 0 ? "" : $"камушек: {stackResources[1]}; ") + (stackResources[2] == 0 ? "" : $"росинка: {stackResources[2]};"));
+            }
+            else
+            {
+                Console.WriteLine($"Куча {number} пуста");
+            }
+        }
+    }
+    class HikingGroup
+    {
+        public Colony colony;
+        public string color;
+        public List<Warrior> warriors;
+        public List<Worker> workers;
+        public Insect special;
+        public Dictionary<string, int> resources = new Dictionary<string, int>() {
+                { "В", 0 },
+                { "Л", 0 },
+                { "Р", 0 },
+                { "К", 0 }
+        };
+        public Random rand = new Random(DateTime.Now.Millisecond);
+
+        public HikingGroup(Colony colony)
+        {
+            this.colony = colony;
+            this.color = colony.color;
+            this.warriors = getWarriors();
+            //this.workers = getWorkers();
+            //this.special = getSpecial();
+        }
+        public List<Warrior> getWarriors()
+        {
+            int antCount = (colony.warriors.Count!=0) ? rand.Next(colony.warriors.Count) +1 : rand.Next(colony.warriors.Count);
+            List<Warrior> export = colony.warriors.GetRange(0, antCount);
+            colony.warriors.RemoveRange(0, antCount);
+            return export;
+        }
+    }
     class Colony
     {
         public string color;
@@ -281,12 +311,12 @@ namespace ants_colony_2
 
             return warriors;
         }
-        public void Info()
+        public void info()
         {
             Console.WriteLine($"Колония {color}:\n--Королева: {queen.name}, личинок: {queen.larvaeNumber}");
             Console.WriteLine($"--Ресурсы: к={resources["К"]} л={resources["Л"]} в={resources["В"]} р={resources["Р"]}");
         }
-        public void Population()
+        public void population()
         {
             Console.WriteLine($"--Популяция {workers.Count + warriors.Count + 1}: р={workers.Count} в={warriors.Count} о=1\n");
         }
@@ -412,13 +442,13 @@ namespace ants_colony_2
             void screen1(int day) {
                 Console.WriteLine("\nЭкран 1 – Начало хода\n---------------------------------");
                 Console.WriteLine($"День: {day} (до засухи осталось {Global.DRY_TIME - day} дней)");
-                colony1.Info();
-                colony1.Population();
-                colony2.Info();
-                colony2.Population();
+                colony1.info();
+                colony1.population();
+                colony2.info();
+                colony2.population();
                 foreach (var item in stacks)
                 {
-                    item.About();
+                    item.about();
                 }
                 // глобальный эфект
             }
@@ -443,6 +473,19 @@ namespace ants_colony_2
 
                 
             }
+
+            void sendHike(List<Colony> colonies)
+            {
+                Stack target = stacks[rand.Next(stacks.Length)];
+                foreach (var colony in Global.colonies)
+                {
+
+                    target.groupsOnStack.Add(new HikingGroup(colony));
+                }
+                //target.coloniesOnStack.Add(colony);
+                target.antsInfo();
+            }
+
             // основной код
             for (int day = 1; day <= Global.DRY_TIME; day++)
             {
@@ -455,11 +498,13 @@ namespace ants_colony_2
                 //screen1(day);
                 //screen2();
             }
+            sendHike(Global.colonies);
+            // результаты
             foreach (var colony in Global.colonies)
             {
                 Console.WriteLine(colony.queen.name);
                 Console.WriteLine(colony.color);
-                colony.Population();
+                colony.population();
             }
             Console.WriteLine(" пришла засуха! ");
             /*
