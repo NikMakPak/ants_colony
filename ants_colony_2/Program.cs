@@ -16,12 +16,12 @@ namespace ants_colony_2
 
     //TODO:
     // понять как добавить всем муравьям привязку к королеве и к колонии
-        //  = добавить королеву каждому муравью и выходить на колонию через нее
+    //  = добавить королеву каждому муравью и выходить на колонию через нее
 
     // продолжить реазицию вывода информации экранов
 
     // перейти к реализации походов и муравьиных скилов
-        // см 450
+    // см 450
     abstract class Insect
     {
         public int hp, def, dmg;
@@ -29,7 +29,7 @@ namespace ants_colony_2
         public Colony colony;
         public Random rand = new Random(DateTime.Now.Millisecond);
 
-        public Insect(string type,int hp, int def, int dmg)
+        public Insect(string type, int hp, int def, int dmg)
         {
             this.type = type;
             this.hp = hp;
@@ -49,8 +49,8 @@ namespace ants_colony_2
         public int queensLimit;
         public int larvaeNumber;
         public int growthCycle;
-        public List<QueenDoughter> queenKids = new List<QueenDoughter> {};
-        public Queen(string type, string name, int hp, int def, int dmg,int growthCycle, int queensLimit) : base(type, hp, def, dmg)
+        public List<QueenDoughter> queenKids = new List<QueenDoughter> { };
+        public Queen(string type, string name, int hp, int def, int dmg, int growthCycle, int queensLimit) : base(type, hp, def, dmg)
         {
             this.type = null;
             this.name = name;
@@ -83,8 +83,8 @@ namespace ants_colony_2
                     colony.workers.Add(ants_Worker[rand.Next(ants_Worker.Count)]);
                     break;
                 case "Queen":
-                    QueenDoughter qKid = Global.genDoughter(colony.queen, $"{name}_дочь_{queenKids.Count+1}");
-                    
+                    QueenDoughter qKid = Global.genDoughter(colony.queen, $"{name}_дочь_{queenKids.Count + 1}");
+
                     if (rand.Next(1000) >= 750)
                     {
                         qKid.isLost = true;
@@ -104,7 +104,7 @@ namespace ants_colony_2
         }
         public virtual void genAnt()
         {
-            string[] antsExample = {"Worker", "Warrior","Queen"};
+            string[] antsExample = { "Worker", "Warrior", "Queen" };
             for (int i = 0; i < larvaeNumber; i++)
             {
                 string antType = antsExample[rand.Next(3)];
@@ -112,21 +112,22 @@ namespace ants_colony_2
                 {
                     addAntToColony(antType);
                 }
-                else {
+                else
+                {
                     antType = antsExample[rand.Next(2)];
-                    addAntToColony(antType); 
+                    addAntToColony(antType);
                 }
             }
             genLarvae();
         }
-        
+
     }
     class QueenDoughter : Queen
     {
         public Queen mother;
         public bool isLost = false;
 
-        public QueenDoughter(string type,string name, int hp, int def, int dmg, int growthCycle, int queensLimit, Queen mother) : base(type,name, hp, def, dmg, growthCycle, queensLimit)
+        public QueenDoughter(string type, string name, int hp, int def, int dmg, int growthCycle, int queensLimit, Queen mother) : base(type, name, hp, def, dmg, growthCycle, queensLimit)
         {
             growthCycle = mother.growthCycle;
             this.type = null;
@@ -145,18 +146,18 @@ namespace ants_colony_2
             genLarvae();
         }
     }
-    
-    
-    
+
+
+
     class Worker : Insect
     {
         public string[] takeElems;
         public int countElems;
 
-        public Worker(string type, int hp, int def, int dmg, string[] takeElems, int countElems) : base(type,hp, def, dmg)
+        public Worker(string type, int hp, int def, int dmg, string[] takeElems, int countElems) : base(type, hp, def, dmg)
         {
             this.takeElems = takeElems;
-            this.dmg = 0;   
+            this.dmg = 0;
             this.countElems = countElems;
         }
         public override void about()
@@ -178,12 +179,12 @@ namespace ants_colony_2
     class Bumblebee : Insect
     {
         public bool canBeAttacked = true;
-        public bool takeResource= false;
+        public bool takeResource = false;
         public int goDefenseSkill = 2;
 
         public Bumblebee(int hp, int def, int dmg, string type, bool canBeAttacked, bool takeResource) : base(type, hp, def, dmg)
         {
-            
+
             this.canBeAttacked = canBeAttacked;
             this.takeResource = takeResource;
         }
@@ -191,13 +192,13 @@ namespace ants_colony_2
 
     class Cricket : Insect
     {
-        public string[] takeResource = {"3","Р"};
+        public string[] takeResource = { "3", "Р" };
         public bool canBeAttacked = true;
         public int targetCount, biteCount;
 
-        public Cricket(int hp, int def, int dmg, string type, bool canBeAttacked, int targetCount, int biteCount) : base(type,hp, def, dmg)
+        public Cricket(int hp, int def, int dmg, string type, bool canBeAttacked, int targetCount, int biteCount) : base(type, hp, def, dmg)
         {
-            
+
             this.canBeAttacked = canBeAttacked;
             this.targetCount = targetCount;
             this.biteCount = biteCount;
@@ -263,7 +264,7 @@ namespace ants_colony_2
         }
         public List<Warrior> getWarriors()
         {
-            int antCount = (colony.warriors.Count!=0) ? rand.Next(colony.warriors.Count) +1 : rand.Next(colony.warriors.Count);
+            int antCount = (colony.warriors.Count != 0) ? rand.Next(colony.warriors.Count) + 1 : rand.Next(colony.warriors.Count);
             List<Warrior> export = colony.warriors.GetRange(0, antCount);
             colony.warriors.RemoveRange(0, antCount);
             return export;
@@ -325,7 +326,7 @@ namespace ants_colony_2
             int sum = 0;
             foreach (var item in resources)
             {
-                sum+=item.Value;
+                sum += item.Value;
             }
             return sum;
         }
@@ -338,9 +339,9 @@ namespace ants_colony_2
     }
     class Global
     {
-        static public List<String> colonyColors = new List<string> {"синие", "белые", "желтые", "фиолетовые", "оранжевые", "голубые","черные","салатовые", "пурпурные" , "коричневые", "золотые"};
+        static public List<String> colonyColors = new List<string> { "синие", "белые", "желтые", "фиолетовые", "оранжевые", "голубые", "черные", "салатовые", "пурпурные", "коричневые", "золотые" };
         static public int DRY_TIME = 12;
-        static public List<Colony> colonies = new List<Colony>{};
+        static public List<Colony> colonies = new List<Colony> { };
         static public Random rand = new Random(DateTime.Now.Millisecond);
         static public List<Worker> getAntsExamples_Worker(string qName)
         {
@@ -414,13 +415,13 @@ namespace ants_colony_2
 
     class Program
     {
-        
+
 
         static void Main(string[] args)
         {
-         Random rand = new Random(DateTime.Now.Millisecond);
-        // кучи
-        // порядок ресурсов: В К Р Л
+            Random rand = new Random(DateTime.Now.Millisecond);
+            // кучи
+            // порядок ресурсов: В К Р Л
             Stack k1 = new Stack(1, new int[] { 28, 0, 0, 0 });
             Stack k2 = new Stack(2, new int[] { 23, 15, 0, 0 });
             Stack k3 = new Stack(3, new int[] { 43, 24, 10, 0 });
@@ -429,17 +430,18 @@ namespace ants_colony_2
             Stack[] stacks = new Stack[] { k1, k2, k3, k4, k5 };
 
             // зеленые
-            Queen queen1 = new Queen("","Феодора", 16, 6, 25,rand.Next(2,6),3);
+            Queen queen1 = new Queen("", "Феодора", 16, 6, 25, rand.Next(2, 6), 3);
             Bumblebee shmel = new Bumblebee(26, 8, 0, "ленивый обычный мирный заботливый", true, false);
             Colony colony1 = Global.genColony("зеленые", queen1, 12, 8, shmel);
-            
+
             // красные
-            Queen queen2 = new Queen("", "Маргрете", 15, 9, 17, rand.Next(3,5), 4);
-            Cricket sverhok = new Cricket(21,5,8, "трудолюбивый обычный агрессивный аномальный сонный",true,2,1);
+            Queen queen2 = new Queen("", "Маргрете", 15, 9, 17, rand.Next(3, 5), 4);
+            Cricket sverhok = new Cricket(21, 5, 8, "трудолюбивый обычный агрессивный аномальный сонный", true, 2, 1);
             Colony colony2 = Global.genColony("красные", queen2, 12, 9, sverhok);
 
             // функции 
-            void screen1(int day) {
+            void screen1(int day)
+            {
                 Console.WriteLine("\nЭкран 1 – Начало хода\n---------------------------------");
                 Console.WriteLine($"День: {day} (до засухи осталось {Global.DRY_TIME - day} дней)");
                 colony1.info();
@@ -452,7 +454,7 @@ namespace ants_colony_2
                 }
                 // глобальный эфект
             }
-            void screen2() 
+            void screen2()
             {
                 Console.WriteLine("\nЭкран 2 – Информация по колонии\n---------------------------------");
                 colony1.antInfo();
@@ -461,36 +463,35 @@ namespace ants_colony_2
             void larvaeGrowth(Queen queen, int day)
             {
                 foreach (var qKid in queen.queenKids)
-                 {
+                {
                     if (day % (qKid.growthCycle + 1) == 0) { qKid.genAnt(); }
                 }
 
-                if (day%(queen.growthCycle +1) == 0)
+                if (day % (queen.growthCycle + 1) == 0)
                 {
                     Console.WriteLine(queen.name);
                     queen.genAnt();
                 }
 
-                
+
             }
 
             void sendHike(List<Colony> colonies)
             {
-                Stack target = stacks[rand.Next(stacks.Length)];
                 foreach (var colony in Global.colonies)
                 {
-
+                    Stack target = stacks[rand.Next(stacks.Length)];
                     target.groupsOnStack.Add(new HikingGroup(colony));
+                    target.antsInfo();
                 }
                 //target.coloniesOnStack.Add(colony);
-                target.antsInfo();
             }
 
             // основной код
             for (int day = 1; day <= Global.DRY_TIME; day++)
             {
                 Console.WriteLine($"\nдень - {day}");
-                foreach (var colony in Global.colonies.GetRange(0,2))
+                foreach (var colony in Global.colonies.GetRange(0, 2))
                 {
                     larvaeGrowth(colony.queen, day);
                 }
