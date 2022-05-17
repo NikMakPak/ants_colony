@@ -22,6 +22,7 @@ namespace ants_colony_2
 
     // перейти к реализации походов и муравьиных скилов
     // см 450
+    // см 482
     abstract class Insect
     {
         public int hp, def, dmg;
@@ -92,7 +93,7 @@ namespace ants_colony_2
                     else
                     {
                         Console.WriteLine("-------------------");
-                        Colony c = Global.genColony("", qKid, 12, 9, colony.special);
+                        Colony c = Global.genColony("", qKid, 12, 9, colony.special[0]);
                         Console.WriteLine(qKid.colony);
                         c.info();
                         c.population();
@@ -219,12 +220,9 @@ namespace ants_colony_2
             this.stackResources = stackResources;
         }
 
-        public void antsInfo()
+        public void aboutAntsOnStack()
         {
-            foreach (var group in groupsOnStack)
-            {
-                Console.WriteLine($"-----\nколония {group.color} сидит на куче {number}");
-            }
+           Console.WriteLine($"- C колонии '{groupsOnStack[groupsOnStack.Count-1].color}' отправились: в:{groupsOnStack[groupsOnStack.Count - 1].warriors.Count} на кучу {number}");
         }
 
         public void about()
@@ -245,7 +243,7 @@ namespace ants_colony_2
         public string color;
         public List<Warrior> warriors;
         public List<Worker> workers;
-        public Insect special;
+        public List<Insect> special = new List<Insect> { };
         public Dictionary<string, int> resources = new Dictionary<string, int>() {
                 { "В", 0 },
                 { "Л", 0 },
@@ -259,6 +257,7 @@ namespace ants_colony_2
             this.colony = colony;
             this.color = colony.color;
             this.warriors = getWarriors();
+            //Console.WriteLine($"было зачислено {warriors.Count} . В колонии осталось {colony.warriors.Count}");
             //this.workers = getWorkers();
             //this.special = getSpecial();
         }
@@ -276,7 +275,7 @@ namespace ants_colony_2
         public Queen queen;
         public List<Warrior> warriors;
         public List<Worker> workers;
-        public Insect special;
+        public List<Insect> special;
         public Dictionary<string, int> resources;
         public Random rand = new Random(DateTime.Now.Millisecond);
 
@@ -287,7 +286,7 @@ namespace ants_colony_2
             this.queen = queen;
             workers = genWorkers(count_R);
             warriors = genWarriors(count_W);
-            this.special = special;
+            this.special = new List<Insect> { special };
             this.resources = resources;
         }
         public List<Worker> genWorkers(int count)
@@ -478,13 +477,24 @@ namespace ants_colony_2
 
             void sendHike(List<Colony> colonies)
             {
-                foreach (var colony in Global.colonies)
+                foreach (var colony in colonies)
                 {
-                    Stack target = stacks[rand.Next(stacks.Length)];
-                    target.groupsOnStack.Add(new HikingGroup(colony));
-                    target.antsInfo();
+                    for (int i = 0; i < 4; i++)
+                    // сделать проверку на пустоту в классе Hike и если так. то не добавлять группу в STack
+                    // разобарться с while и сделать это через него
+                    {
+                        Console.WriteLine($"\nв колонии {colony.color} живет: {colony.warriors.Count + colony.workers.Count + colony.special.Count}");
+                        Stack target = stacks[rand.Next(stacks.Length)];
+                        target.groupsOnStack.Add(new HikingGroup(colony));
+                        target.aboutAntsOnStack();
+                    }
+                    //while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
+                    //{
+                       
+                    //    //target.antsInfo();
+                    //}
+                    
                 }
-                //target.coloniesOnStack.Add(colony);
             }
 
             // основной код
