@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +21,7 @@ namespace ants_colony_2
     // продолжить реазицию вывода информации экранов
 
     // перейти к реализации походов и муравьиных скилов
+    // поменять словари с ресурсами на обычные списки
     // см 450
     // см 482
     abstract class Insect
@@ -222,7 +223,7 @@ namespace ants_colony_2
 
         public void aboutAntsOnStack()
         {
-           Console.WriteLine($"- C колонии '{groupsOnStack[groupsOnStack.Count-1].color}' отправились: в:{groupsOnStack[groupsOnStack.Count - 1].warriors.Count} на кучу {number}");
+            Console.WriteLine($"- C колонии '{groupsOnStack[groupsOnStack.Count - 1].color}' отправились: р={groupsOnStack[groupsOnStack.Count - 1].workers.Count}, в={groupsOnStack[groupsOnStack.Count - 1].warriors.Count}, о={groupsOnStack[groupsOnStack.Count - 1].special.Count} на кучу {number}");
         }
 
         public void about()
@@ -243,7 +244,7 @@ namespace ants_colony_2
         public string color;
         public List<Warrior> warriors;
         public List<Worker> workers;
-        public List<Insect> special = new List<Insect> { };
+        public List<Insect> special;
         public Dictionary<string, int> resources = new Dictionary<string, int>() {
                 { "В", 0 },
                 { "Л", 0 },
@@ -257,15 +258,29 @@ namespace ants_colony_2
             this.colony = colony;
             this.color = colony.color;
             this.warriors = getWarriors();
-            //Console.WriteLine($"было зачислено {warriors.Count} . В колонии осталось {colony.warriors.Count}");
-            //this.workers = getWorkers();
-            //this.special = getSpecial();
+            this.workers = getWorkers();
+            this.special = getSpecials();
+            //Console.WriteLine($"было зачислено {special.Count} . В колонии осталось {colony.special.Count}");
         }
         public List<Warrior> getWarriors()
         {
             int antCount = (colony.warriors.Count != 0) ? rand.Next(colony.warriors.Count) + 1 : rand.Next(colony.warriors.Count);
             List<Warrior> export = colony.warriors.GetRange(0, antCount);
             colony.warriors.RemoveRange(0, antCount);
+            return export;
+        }
+        public List<Worker> getWorkers()
+        {
+            int antCount = (colony.workers.Count != 0) ? rand.Next(colony.workers.Count) + 1 : rand.Next(colony.workers.Count);
+            List<Worker> export = colony.workers.GetRange(0, antCount);
+            colony.workers.RemoveRange(0, antCount);
+            return export;
+        }
+        public List<Insect> getSpecials()
+        {
+            int antCount = (colony.special.Count != 0) ? rand.Next(colony.special.Count) + 1 : rand.Next(colony.special.Count);
+            List<Insect> export = colony.special.GetRange(0, antCount);
+            colony.special.RemoveRange(0, antCount);
             return export;
         }
     }
@@ -318,7 +333,7 @@ namespace ants_colony_2
         }
         public void population()
         {
-            Console.WriteLine($"--Популяция {workers.Count + warriors.Count + 1}: р={workers.Count} в={warriors.Count} о=1\n");
+            Console.WriteLine($"--Популяция {workers.Count + warriors.Count + special.Count}: р={workers.Count} в={warriors.Count} о={special.Count}\n");
         }
         public int getResourcesSum()
         {
@@ -479,21 +494,21 @@ namespace ants_colony_2
             {
                 foreach (var colony in colonies)
                 {
-                    for (int i = 0; i < 4; i++)
+                    while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                     // сделать проверку на пустоту в классе Hike и если так. то не добавлять группу в STack
                     // разобарться с while и сделать это через него
                     {
-                        Console.WriteLine($"\nв колонии {colony.color} живет: {colony.warriors.Count + colony.workers.Count + colony.special.Count}");
+                        
                         Stack target = stacks[rand.Next(stacks.Length)];
                         target.groupsOnStack.Add(new HikingGroup(colony));
                         target.aboutAntsOnStack();
                     }
                     //while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                     //{
-                       
+
                     //    //target.antsInfo();
                     //}
-                    
+
                 }
             }
 
