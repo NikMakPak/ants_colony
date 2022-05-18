@@ -155,7 +155,8 @@ namespace ants_colony_2
     {
         public string[] takeElems;
         public int countElems;
-
+        public int[] takenResources = new int[] {0,0,0,0};
+        //                                                 new string[] {"0","3"},2
         public Worker(string type, int hp, int def, int dmg, string[] takeElems, int countElems) : base(type, hp, def, dmg)
         {
             this.takeElems = takeElems;
@@ -165,7 +166,38 @@ namespace ants_colony_2
         public override void about()
         {
             base.about();
+            Console.WriteLine("----------takeelems");
+            foreach (var item in takeElems)
+            {
+                Console.WriteLine(item);
+            }
+            Console.WriteLine($"скок взял: {countElems}");
+            //В К Р Л
+            Console.WriteLine($"веточка: {takenResources[0]}\nкамушек: {takenResources[1]}\nросинка: {takenResources[2]}\nлистик: {takenResources[3]}");
             Console.WriteLine("Имя: в разработке..");
+        }
+        public void takeResource(List<int> resources)
+        {
+            for (int i = 0; i < countElems; i++)
+            {
+                if (countElems == 1 && takeElems.Length>1)
+                {
+                    int randRes = rand.Next(2);
+                    if (resources[Convert.ToInt32(takeElems[randRes])] !=0)
+                    {
+                        resources[Convert.ToInt32(takeElems[randRes])] -= 1;
+                        takenResources[Convert.ToInt32(takeElems[randRes])] += 1;
+                    }
+                }
+                else
+                {
+                    if (resources[Convert.ToInt32(takeElems[i])] !=0)
+                    {
+                        resources[Convert.ToInt32(takeElems[i])] -= 1;
+                        takenResources[Convert.ToInt32(takeElems[i])] += 1;
+                    }
+                }
+            }
         }
     }
     class Warrior : Insect
@@ -212,18 +244,21 @@ namespace ants_colony_2
     class Stack
     {
         public int number;
-        public int[] stackResources;
+        public List<int> stackResources;
         public List<HikingGroup> groupsOnStack = new List<HikingGroup> { };
 
         public Stack(int number, int[] stackResources)
         {
             this.number = number;
-            this.stackResources = stackResources;
+            this.stackResources = new List<int>(stackResources);
         }
 
         public void aboutAntsOnStack()
         {
-            Console.WriteLine($"- C колонии '{groupsOnStack[groupsOnStack.Count - 1].color}' отправились: р={groupsOnStack[groupsOnStack.Count - 1].workers.Count}, в={groupsOnStack[groupsOnStack.Count - 1].warriors.Count}, о={groupsOnStack[groupsOnStack.Count - 1].special.Count} на кучу {number}");
+            foreach (var group in groupsOnStack)
+            {
+                Console.WriteLine($"- C колонии '{group.color}' отправились: р={group.workers.Count}, в={group.warriors.Count}, о={group.special.Count} на кучу {number}");
+            }
         }
 
         public void about()
@@ -237,6 +272,21 @@ namespace ants_colony_2
                 Console.WriteLine($"Куча {number} пуста");
             }
         }
+        public void antsFight()
+        {
+
+        }
+
+        public void antsTake()
+        {
+            foreach (var group in groupsOnStack)
+            {
+                foreach (var worker in group.workers)
+                {
+                    worker.takeResource(stackResources);
+                }
+            }
+        }
     }
     class HikingGroup
     {
@@ -245,12 +295,7 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
-        public Dictionary<string, int> resources = new Dictionary<string, int>() {
-                { "В", 0 },
-                { "Л", 0 },
-                { "Р", 0 },
-                { "К", 0 }
-        };
+        public List<int> resources = new List<int>{0,0,0,0};
         public Random rand = new Random(DateTime.Now.Millisecond);
 
         public HikingGroup(Colony colony)
@@ -262,6 +307,7 @@ namespace ants_colony_2
             this.special = getSpecials();
             //Console.WriteLine($"было зачислено {special.Count} . В колонии осталось {colony.special.Count}");
         }
+        // нужно изменить распределение муравьев! сейчас добавляется огромное количество мини походов
         public List<Warrior> getWarriors()
         {
             int antCount = (colony.warriors.Count != 0) ? rand.Next(colony.warriors.Count) + 1 : rand.Next(colony.warriors.Count);
@@ -283,6 +329,21 @@ namespace ants_colony_2
             colony.special.RemoveRange(0, antCount);
             return export;
         }
+        public void supplementAnts()
+        {
+            foreach (var ant in getWarriors())
+            {
+                warriors.Add(ant);
+            }
+            foreach (var ant in getWorkers())
+            {
+                workers.Add(ant);
+            }
+            foreach (var ant in getSpecials())
+            {
+                special.Add(ant);
+            }
+        }
     }
     class Colony
     {
@@ -291,18 +352,17 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
-        public Dictionary<string, int> resources;
+        public List<int> resources = new List<int>{ 0, 0, 0, 0 };
         public Random rand = new Random(DateTime.Now.Millisecond);
 
 
-        public Colony(string color, Queen queen, int count_R, int count_W, Insect special, Dictionary<string, int> resources)
+        public Colony(string color, Queen queen, int count_R, int count_W, Insect special)
         {
             this.color = color;
             this.queen = queen;
             workers = genWorkers(count_R);
             warriors = genWarriors(count_W);
             this.special = new List<Insect> { special };
-            this.resources = resources;
         }
         public List<Worker> genWorkers(int count)
         {
@@ -329,21 +389,21 @@ namespace ants_colony_2
         public void info()
         {
             Console.WriteLine($"Колония {color}:\n--Королева: {queen.name}, личинок: {queen.larvaeNumber}");
-            Console.WriteLine($"--Ресурсы: к={resources["К"]} л={resources["Л"]} в={resources["В"]} р={resources["Р"]}");
+            Console.WriteLine($"--Ресурсы: в={resources[0]} к={resources[1]} р={resources[2]} л={resources[3]}");
         }
         public void population()
         {
             Console.WriteLine($"--Популяция {workers.Count + warriors.Count + special.Count}: р={workers.Count} в={warriors.Count} о={special.Count}\n");
         }
-        public int getResourcesSum()
-        {
-            int sum = 0;
-            foreach (var item in resources)
-            {
-                sum += item.Value;
-            }
-            return sum;
-        }
+        //public int getResourcesSum()
+        //{
+        //    int sum = 0;
+        //    foreach (var item in resources)
+        //    {
+        //        sum += item.Value;
+        //    }
+        //    return sum;
+        //}
         public void antInfo()
         {
 
@@ -353,6 +413,8 @@ namespace ants_colony_2
     }
     class Global
     {
+        // порядок ресурсов: В К Р Л
+        //                   0 1 2 3
         static public List<String> colonyColors = new List<string> { "синие", "белые", "желтые", "фиолетовые", "оранжевые", "голубые", "черные", "салатовые", "пурпурные", "коричневые", "золотые" };
         static public int DRY_TIME = 12;
         static public List<Colony> colonies = new List<Colony> { };
@@ -363,14 +425,14 @@ namespace ants_colony_2
             {
                 return new List<Worker>()
                 {
-                    new Worker("продвинутый",6,2,0,new string[] {"В","Л"},2),
-                    new Worker("старший капризный",2,1,0,new string[] {"Л","К"},1),
+                    new Worker("продвинутый",6,2,0,new string[] {"0","3"},2),
+                    new Worker("старший капризный",2,1,0,new string[] {"3","1"},1),
                 };
             }
             return new List<Worker>()
             {
-                new Worker("обычный",1,0,0,new string[] {"В","Р"},1),
-                new Worker("старший забывчивый",2,1,0,new string[] {"К","Р"},1),
+                new Worker("обычный",1,0,0,new string[] {"0","2"},1),
+                new Worker("старший забывчивый",2,1,0,new string[] {"1","2"},1),
             };
         }
 
@@ -401,12 +463,7 @@ namespace ants_colony_2
         {
             string chosenColor = colonyColors[rand.Next(colonyColors.Count)];
             colonyColors.Remove(chosenColor);
-            Colony colony = new Colony((color == "") ? chosenColor : color, queen, count_R, count_W, special, new Dictionary<string, int>() {
-                { "В", 0 },
-                { "Л", 0 },
-                { "Р", 0 },
-                { "К", 0 }
-            });
+            Colony colony = new Colony((color == "") ? chosenColor : color, queen, count_R, count_W, special);
             queen.colony = colony;
             colonies.Add(colony);
             return colony;
@@ -474,6 +531,12 @@ namespace ants_colony_2
                 colony1.antInfo();
 
             }
+            void screen3()
+            {
+                Console.WriteLine("\nЭкран 3 - Поход\n---------------------------------\nНачало дня:");
+                Hiking(Global.colonies);
+
+            }
             void larvaeGrowth(Queen queen, int day)
             {
                 foreach (var qKid in queen.queenKids)
@@ -490,28 +553,36 @@ namespace ants_colony_2
 
             }
 
-            void sendHike(List<Colony> colonies)
+            void Hiking(List<Colony> colonies)
             {
+                // отправка муравьев на кучи
                 foreach (var colony in colonies)
                 {
                     while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
-                    // сделать проверку на пустоту в классе Hike и если так. то не добавлять группу в STack
-                    // разобарться с while и сделать это через него
                     {
-                        
                         Stack target = stacks[rand.Next(stacks.Length)];
-                        target.groupsOnStack.Add(new HikingGroup(colony));
-                        target.aboutAntsOnStack();
+                        if (target.groupsOnStack.Find((x) => x.color == colony.color) != null)
+                        {
+                            HikingGroup hGroup = target.groupsOnStack.Find((x) => x.color == colony.color);
+                            hGroup.supplementAnts();
+                        }
+                        else { target.groupsOnStack.Add(new HikingGroup(colony)); }
                     }
-                    //while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
-                    //{
-
-                    //    //target.antsInfo();
-                    //}
-
+                }
+                // на куче
+                foreach (var stack in stacks)
+                {
+                    // набросок функций
+                    //stack.antsFight();
+                    stack.antsTake();
+                }
+                // вывод просто дебаг инфы
+                foreach (var stack in stacks)
+                {
+                    Console.WriteLine();
+                    stack.aboutAntsOnStack();
                 }
             }
-
             // основной код
             for (int day = 1; day <= Global.DRY_TIME; day++)
             {
@@ -524,7 +595,13 @@ namespace ants_colony_2
                 //screen1(day);
                 //screen2();
             }
-            sendHike(Global.colonies);
+            //Console.WriteLine("++++++до");
+            //k3.about();
+            //colony1.workers[12].takeResource(k3.stackResources);
+            //colony1.workers[12].about();
+            //k3.about();
+            //Console.WriteLine("++++++");
+            screen3();
             // результаты
             foreach (var colony in Global.colonies)
             {
