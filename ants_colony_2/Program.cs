@@ -20,15 +20,17 @@ namespace ants_colony_2
 
     // продолжить реазицию вывода информации экранов
 
-    // перейти к реализации походов и муравьиных скилов
-    // поменять словари с ресурсами на обычные списки
-    // см 450
-    // см 482
+    // начать борьбу и атаку
+    // доделать antTake для особенных насекомых
+    // доделать атаку в warrior
+    // переделать выбор особых насек
+    // добавить провеhre на френд колонию
     abstract class Insect
     {
         public int hp, def, dmg;
         public string type;
         public Colony colony;
+        public bool wasInFight = false;
         public Random rand = new Random(DateTime.Now.Millisecond);
 
         public Insect(string type, int hp, int def, int dmg)
@@ -155,8 +157,7 @@ namespace ants_colony_2
     {
         public string[] takeElems;
         public int countElems;
-        public int[] takenResources = new int[] {0,0,0,0};
-        //                                                 new string[] {"0","3"},2
+        public List<int> takenResources = new List<int> {0,0,0,0};
         public Worker(string type, int hp, int def, int dmg, string[] takeElems, int countElems) : base(type, hp, def, dmg)
         {
             this.takeElems = takeElems;
@@ -166,13 +167,12 @@ namespace ants_colony_2
         public override void about()
         {
             base.about();
-            Console.WriteLine("----------takeelems");
+            Console.WriteLine("----------take elems");
             foreach (var item in takeElems)
             {
                 Console.WriteLine(item);
             }
             Console.WriteLine($"скок взял: {countElems}");
-            //В К Р Л
             Console.WriteLine($"веточка: {takenResources[0]}\nкамушек: {takenResources[1]}\nросинка: {takenResources[2]}\nлистик: {takenResources[3]}");
             Console.WriteLine("Имя: в разработке..");
         }
@@ -208,6 +208,53 @@ namespace ants_colony_2
         {
             this.biteCount = biteCount;
             this.targetCount = targetCount;
+        }
+        public void attack(HikingGroup enemy)
+        {
+            string[] antsExample = { "Worker", "Warrior", "Bumblebee", "Cricket" };
+            string antType = antsExample[rand.Next(4)];
+            switch (antType)
+            {
+                case "Warrior":
+                    List<Warrior> freeEnemyWar = enemy.warriors.FindAll(x => (x.wasInFight != true));
+                    if (freeEnemyWar != null)
+                    {
+                        int r = rand.Next(freeEnemyWar.Count);
+                        fight(freeEnemyWar[r], antType);
+                    }
+                    break;
+                case "Worker":
+                    //attackingAnt.attack(enemy.workers[rand.Next(enemy.workers.Count)]);
+                    List<Worker> freeEnemyWork = enemy.workers.FindAll(x => (x.wasInFight != true));
+                    if (freeEnemyWork != null)
+                    {
+                        freeEnemyWork[rand.Next(freeEnemyWork.Count)].hp = 0;
+                        freeEnemyWork[rand.Next(freeEnemyWork.Count)].wasInFight = true;
+                    }
+                    break;
+                case "Bumblebee":
+                    //Warrior w = (Warrior)insects[0];
+   //!                 // переделать выбор
+                    //List<Insect> freeEnemyB = enemy.special.FindAll(x => (x.GetType().Name == "Bumblebee"));
+                    //if (freeEnemyB != null)
+                    //{
+                    //    int r = rand.Next(freeEnemyB.Count);
+                    //    fight((Bumblebee)freeEnemyB[r], antType);
+                    //}
+                    break;
+                case "Cricket":
+                    //List<Insect> freeEnemyC = enemy.special.FindAll(x => (x.GetType().Name == "Cricket"));
+                    //if (freeEnemyC != null)
+                    //{
+                    //    int r = rand.Next(freeEnemyC.Count);
+                    //    fight((Cricket)freeEnemyC[r], antType);
+                    //}
+                    break;
+            }
+        }
+        public void fight(Insect enemyAnt, string antType)
+        {
+
         }
     }
     class Bumblebee : Insect
@@ -246,6 +293,8 @@ namespace ants_colony_2
         public int number;
         public List<int> stackResources;
         public List<HikingGroup> groupsOnStack = new List<HikingGroup> { };
+        public Random rand = new Random(DateTime.Now.Millisecond);
+
 
         public Stack(int number, int[] stackResources)
         {
@@ -272,9 +321,37 @@ namespace ants_colony_2
                 Console.WriteLine($"Куча {number} пуста");
             }
         }
-        public void antsFight()
+        public void assignRandomAnt()
         {
 
+        }
+        public void antsFight()
+        {
+            // определение атакующего и поиск цели
+            for (int i = 0; i < groupsOnStack.Count-1; i++)
+            {
+                for (int j = 1; j < groupsOnStack.Count; j++)
+                {
+                    var attacking = groupsOnStack[i];
+                    if (rand.Next(10) > 5)
+                    {
+                        var enemy = groupsOnStack[j]; // сделать проверку на союзную колонии в виде return функции
+                        foreach (var attackingAnt in attacking.warriors)
+                        {
+                            // помни про то что дочерние колонии воевать не могут!
+                            // сделать рандомный выбор противника и добавить поле каждому насекомому : infight - чтобы не нападали два на одного и тд
+                            // сделать  убийство через зануление хп, а выживших добавлять в новый массив с помощью фильтра по хп!=0 полсе всех драк
+                            attackingAnt.attack(enemy);
+                            
+                        }
+                        break;
+                    }
+                }
+            }
+            //  рандомом выбирает свою цель: рабочий или воин или особенное
+            // если выбран 2 или 3 - то будет битва: пока один не умрет из них
+            // передаю муравью воинус сразу рандомную цель которую он может атаковать. и далее он из своих особенностей атакует
+            
         }
 
         public void antsTake()
@@ -295,8 +372,9 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
-        public List<int> resources = new List<int>{0,0,0,0};
+        public List<int> resources = new List<int>{0,0,0,0 };
         public Random rand = new Random(DateTime.Now.Millisecond);
+        public List<Insect> losses = new List<Insect>();
 
         public HikingGroup(Colony colony)
         {
@@ -354,7 +432,6 @@ namespace ants_colony_2
         public List<Insect> special;
         public List<int> resources = new List<int>{ 0, 0, 0, 0 };
         public Random rand = new Random(DateTime.Now.Millisecond);
-
 
         public Colony(string color, Queen queen, int count_R, int count_W, Insect special)
         {
@@ -573,7 +650,7 @@ namespace ants_colony_2
                 foreach (var stack in stacks)
                 {
                     // набросок функций
-                    //stack.antsFight();
+                    stack.antsFight();
                     stack.antsTake();
                 }
                 // вывод просто дебаг инфы
@@ -600,7 +677,10 @@ namespace ants_colony_2
             //colony1.workers[12].takeResource(k3.stackResources);
             //colony1.workers[12].about();
             //k3.about();
-            //Console.WriteLine("++++++");
+            //List<Insect> insects = new List<Insect> { colony1.warriors[0] };
+            //insects[0].hp -= 1;
+            //Warrior w = (Warrior)insects[0];
+            //w.about();
             screen3();
             // результаты
             foreach (var colony in Global.colonies)
@@ -610,6 +690,13 @@ namespace ants_colony_2
                 colony.population();
             }
             Console.WriteLine(" пришла засуха! ");
+            Console.WriteLine("++++++");
+            List<Stack> ee = new List<Stack> {k1, k2 , k3};
+            foreach (var item in ee.FindAll(x => x.number>1))
+            {
+                Console.WriteLine(item.number);
+            }
+
             /*
             //q1.colony = colony1;
             //q1.genAnt();
