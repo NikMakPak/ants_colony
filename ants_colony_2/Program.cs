@@ -15,18 +15,13 @@ namespace ants_colony_2
      */
 
     //TODO:
-    // продолжить реазицию вывода информации экранов
+    // увеличить количество личинок королевам. изза большие потери - ? выяснить надо ли
+    // странно добавляется шмель и крикет в походы исправить ? вроде пофиксил. понаблюдать
     
-    // доделать атаку в warrior
+    // финишный вывод инфы
 
-    // реализовать для особенных насек сбор ресурсов\
-    // сделать выбор куч c учетом поля isExausted !!
-    // проблему найти - мурав не берут ресурсы
+    // сделать особое событие
 
-    // реализовать очистку листов после битвы
-
-    // сделать при возрвате домой зачисление ресурсов из группы в базу
-    // увеличить количество личинок королевам. - большие потери
     abstract class Insect
     {
         public int dmg;
@@ -50,6 +45,11 @@ namespace ants_colony_2
             {
                 hp = 0;
             }
+        }
+
+        public void updHP()
+        {
+            this.hp += this.def;
         }
 
         public virtual void about()
@@ -90,11 +90,9 @@ namespace ants_colony_2
             switch (antType)
             {
                 case "Warrior":
-                    //Console.WriteLine(" воин");
                     colony.warriors.Add(ants_Warrior[rand.Next(ants_Warrior.Count)]);
                     break;
                 case "Worker":
-                    //Console.WriteLine(" рабочий");
                     colony.workers.Add(ants_Worker[rand.Next(ants_Worker.Count)]);
                     break;
                 case "Queen":
@@ -106,15 +104,16 @@ namespace ants_colony_2
                     }
                     else
                     {
-                        Console.WriteLine("-------------------");
-                        Colony c = Global.genColony("", qKid, 12, 9, colony.special[0]);
+                        //Console.WriteLine("-------------------");
+                        Colony c = Global.genColony("", qKid, 12, 9, colony.specialPrototype[0]);
                         c.friendColonies.Add(colony);
                         colony.friendColonies.Add(c);
-                        Console.WriteLine(qKid.colony);
-                        c.info();
-                        c.population();
-                        Console.WriteLine("-------------------");
+                        //Console.WriteLine(qKid.colony);
+                        //c.info();
+                        //c.population();
+                        //Console.WriteLine("-------------------");
                         queenKids.Add(qKid);
+                        Console.WriteLine($"--Рождена королева! Основала колонию: {c.color}");
                     }
                     break;
             }
@@ -135,6 +134,7 @@ namespace ants_colony_2
                     addAntToColony(antType);
                 }
             }
+            Console.WriteLine($"--Выросли: р={colony.warriors.FindAll(x => (x.colony == null)).Count}, в={colony.workers.FindAll(x => (x.colony == null)).Count}");
             foreach (var warrior in colony.warriors)
             {
                 warrior.colony = colony;
@@ -144,6 +144,7 @@ namespace ants_colony_2
                 worker.colony = colony;
             }
             genLarvae();
+            Console.WriteLine($"--Новые личинки: {larvaeNumber}\n");
         }
 
     }
@@ -177,6 +178,7 @@ namespace ants_colony_2
                 worker.colony = colony;
             }
             genLarvae();
+            Console.WriteLine($"--Новые личинки: {larvaeNumber}");
         }
     }
 
@@ -186,7 +188,6 @@ namespace ants_colony_2
     {
         public string[] takeElems;
         public int countElems;
-        public List<int> takenResources = new List<int> {0,0,0,0};
         public Worker(string type, int hp, int def, int dmg, string[] takeElems, int countElems) : base(type, hp, def, dmg)
         {
             this.takeElems = takeElems;
@@ -201,11 +202,8 @@ namespace ants_colony_2
             {
                 Console.WriteLine(item);
             }
-            Console.WriteLine($"скок взял: {countElems}");
-            Console.WriteLine($"веточка: {takenResources[0]}\nкамушек: {takenResources[1]}\nросинка: {takenResources[2]}\nлистик: {takenResources[3]}");
-            Console.WriteLine("Имя: в разработке..");
         }
-        public void takeResource(List<int> resources)
+        public void takeResource(List<int> resources, List<int> groupResources)
         {
             for (int i = 0; i < countElems; i++)
             {
@@ -215,7 +213,7 @@ namespace ants_colony_2
                     if (resources[Convert.ToInt32(takeElems[randRes])] !=0)
                     {
                         resources[Convert.ToInt32(takeElems[randRes])] -= 1;
-                        takenResources[Convert.ToInt32(takeElems[randRes])] += 1;
+                        groupResources[Convert.ToInt32(takeElems[randRes])] += 1;
                     }
                 }
                 else
@@ -223,7 +221,7 @@ namespace ants_colony_2
                     if (resources[Convert.ToInt32(takeElems[i])] !=0)
                     {
                         resources[Convert.ToInt32(takeElems[i])] -= 1;
-                        takenResources[Convert.ToInt32(takeElems[i])] += 1;
+                        groupResources[Convert.ToInt32(takeElems[i])] += 1;
                     }
                 }
             }
@@ -387,13 +385,12 @@ namespace ants_colony_2
 
     class Cricket : Insect
     {
-        public string[] takeResource = { "3", "Р" };
+        public string[] canTakeResource = { "3", "2" };
         public bool canBeAttacked = true;
         public int targetCount, biteCount;
         public string modifier;
-
         public Cricket(int hp, int def, int dmg, string type, bool canBeAttacked, int targetCount, int biteCount, string modifier) : base(type, hp, def, dmg)
-        {
+        { 
             this.modifier = modifier;
             this.canBeAttacked = canBeAttacked;
             this.targetCount = targetCount;
@@ -417,6 +414,17 @@ namespace ants_colony_2
             }
         }
 
+        public void takeResource(List<int> resources, List<int> groupResources)
+        {
+            for (int i = 0; i < Convert.ToInt32(canTakeResource[0]); i++)
+            {
+                if (resources[Convert.ToInt32(canTakeResource[1])] != 0)
+                {
+                    resources[Convert.ToInt32(canTakeResource[1])] -= 1;
+                    groupResources[Convert.ToInt32(canTakeResource[1])] += 1;
+                }
+            }
+        }
     }
 
     class Stack
@@ -490,6 +498,7 @@ namespace ants_colony_2
             foreach (var group in groupsOnStack)
             {
                 group.calcLosses();
+                group.cancelBumblebeeEffect();
             }
         }
 
@@ -502,7 +511,7 @@ namespace ants_colony_2
                     return group.warriors.FindAll(x => (x.hp != 0));
                 }
             }
-            return null;
+            return new List<Warrior> { };
         }
 
         public List<Worker> returnWorkers(string color)
@@ -514,7 +523,7 @@ namespace ants_colony_2
                     return group.workers.FindAll(x => (x.hp != 0));
                 }
             }
-            return null;
+            return new List<Worker> { };
         }
         public List<Insect> returnSpecials(string color)
         {
@@ -525,7 +534,7 @@ namespace ants_colony_2
                     return group.special.FindAll(x => (x.hp != 0));
                 }
             }
-            return null;
+            return new List<Insect> { };
         }
 
         public void antsTake()
@@ -534,12 +543,45 @@ namespace ants_colony_2
             {
                 foreach (var worker in group.workers)
                 {
-                    worker.takeResource(stackResources);
+                    worker.takeResource(stackResources, group.groupResources);
+                }
+                foreach (var special in group.special)
+                {
+                    if (special.dmg>0)
+                    {
+                        ((Cricket)special).takeResource(stackResources, group.groupResources);
+                    }
                 }
             }
+            
             if (stackResources[0]+ stackResources[1] + stackResources[2] + stackResources[3]==0)
             {
                 isExhausted = true;
+            }
+        }
+
+        public void collectResources(string color, List<int> colonyResources)
+        {
+            foreach (var group in groupsOnStack)
+            {
+                if (group.color == color)
+                {
+                    for (int i = 0; i < colonyResources.Count; i++)
+                    {
+                        colonyResources[i] += group.groupResources[i];
+                    }
+                }
+            }
+        }
+
+        public void getLosses(string color,Colony colony)
+        {
+            foreach (var group in groupsOnStack)
+            {
+                if (group.color == color)
+                {
+                    colony.losses = group.losses;
+                }
             }
         }
     }
@@ -550,9 +592,9 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
-        public List<int> resources = new List<int>{0,0,0,0 };
+        public List<int> groupResources = new List<int>{0,0,0,0};
         public Random rand = new Random(DateTime.Now.Millisecond);
-        public List<int> losses = new List<int>();
+        public List<int> losses = new List<int> { 0, 0, 0 };
         // Р В О
 
         public HikingGroup(Colony colony)
@@ -562,7 +604,6 @@ namespace ants_colony_2
             this.warriors = getWarriors();
             this.workers = getWorkers();
             this.special = getSpecials();
-            //Console.WriteLine($"было зачислено {special.Count} . В колонии осталось {colony.special.Count}");
         }
         // нужно изменить распределение муравьев! сейчас добавляется огромное количество мини походов
         public List<Warrior> getWarriors()
@@ -581,7 +622,7 @@ namespace ants_colony_2
         }
         public List<Insect> getSpecials()
         {
-            int antCount = (colony.special.Count != 0) ? rand.Next(colony.special.Count) + 1 : rand.Next(colony.special.Count);
+            int antCount = (colony.special.Count != 0) ? 1 : 0;
             List<Insect> export = colony.special.GetRange(0, antCount);
             colony.special.RemoveRange(0, antCount);
             return export;
@@ -609,33 +650,39 @@ namespace ants_colony_2
                foreach (var war in warriors)
                {
                    war.def *= 2;
+                    war.updHP();
                }
                foreach (var work in workers)
                {
                    work.def *= 2;
-               }
+                    work.updHP();
+                }
                foreach (var spec in special)
                {
                    spec.def *= 2;
-               }
+                    spec.updHP();
+                }
            }
         }
 
-        public void cancelBumblebeeEffect(List<HikingGroup> groups)
+        public void cancelBumblebeeEffect()
         {
             if ((special.FindAll(x => (x.GetType().Name == "Bumblebee"))).Count != 0)
             {
                 foreach (var war in warriors)
                 {
                     war.def /= 2;
+                    war.updHP();
                 }
                 foreach (var work in workers)
                 {
                     work.def /= 2;
+                    work.updHP();
                 }
                 foreach (var spec in special)
                 {
                     spec.def /= 2;
+                    spec.updHP();
                 }
             }
         }
@@ -665,9 +712,9 @@ namespace ants_colony_2
         public void calcLosses()
         {
             // Р В О
-            losses.Add(workers.FindAll(x => (x.hp == 0)).Count);
-            losses.Add(warriors.FindAll(x => (x.hp == 0)).Count);
-            losses.Add(special.FindAll(x => (x.hp == 0)).Count);
+            losses[0]=(workers.FindAll(x => (x.hp == 0)).Count);
+            losses[1]=(warriors.FindAll(x => (x.hp == 0)).Count);
+            losses[2]=(special.FindAll(x => (x.hp == 0)).Count);
         }
 
     }
@@ -679,7 +726,9 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
+        public List<Insect> specialPrototype;
         public List<int> resources = new List<int>{ 0, 0, 0, 0 };
+        public List<int> losses = new List<int> { 0,0,0};
         public Random rand = new Random(DateTime.Now.Millisecond);
 
         public Colony(string color, Queen queen, int count_R, int count_W, Insect special)
@@ -689,6 +738,7 @@ namespace ants_colony_2
             workers = genWorkers(count_R);
             warriors = genWarriors(count_W);
             this.special = new List<Insect> { special };
+            this.specialPrototype = new List<Insect> { special };
         }
         public List<Worker> genWorkers(int count)
         {
@@ -747,7 +797,12 @@ namespace ants_colony_2
 
             Console.WriteLine("в разработке");
         }
-
+        public void aboutReturn()
+        {
+            Console.WriteLine($"В колонию '{color}' вернулись:");
+            Console.WriteLine($"--р={workers.Count}, в={warriors.Count}, о={special.Count}\n--Добыто ресурсов: в={resources[0]}, к={resources[1]}, р={resources[2]}, л={resources[3]}");
+            Console.WriteLine($"--Потери: р={losses[0]} в={losses[1]} о={losses[2]}");
+        }
     }
     class Global
     {
@@ -847,7 +902,7 @@ namespace ants_colony_2
             Stack k3 = new Stack(3, new int[] { 43, 24, 10, 0 });
             Stack k4 = new Stack(4, new int[] { 33, 40, 0, 0 });
             Stack k5 = new Stack(5, new int[] { 41, 0, 0, 0 });
-            Stack[] stacks = new Stack[] { k1, k2, k3, k4, k5 };
+            List<Stack> stacks = new List<Stack> { k1, k2, k3, k4, k5 };
 
             // зеленые
             Queen queen1 = new Queen("", "Феодора", 16, 6, 25, rand.Next(2, 6), 3);
@@ -889,15 +944,16 @@ namespace ants_colony_2
 
                 Console.WriteLine("\nКонец дня:");
                 returnHome(Global.colonies, day);
-                Console.WriteLine("---------------------------------");
-
             }
             void larvaeGrowth(Queen queen, int day)
             {
                 if (day % (queen.growthCycle + 1) == 0)
                 {
-                    Console.WriteLine(queen.name);
                     queen.genAnt();
+                }
+                else
+                {
+                    Console.WriteLine($"--Выросли: еще растут ({Math.Abs(queen.growthCycle+1 - day)} д.)\n") ;
                 }
             }
 
@@ -908,8 +964,8 @@ namespace ants_colony_2
                 {
                     while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                     {
-                        Stack target = stacks[rand.Next(stacks.Length)];
-                        if (target.groupsOnStack.Find((x) => x.color == colony.color) != null)
+                        Stack target = stacks.FindAll(x => (x.isExhausted==false))[rand.Next(stacks.FindAll(x => (x.isExhausted == false)).Count)];
+                        if (target.groupsOnStack.Find(x => (x.color == colony.color)) != null)
                         {
                             HikingGroup hGroup = target.groupsOnStack.Find((x) => x.color == colony.color);
                             hGroup.supplementAnts();
@@ -917,61 +973,56 @@ namespace ants_colony_2
                         else { target.groupsOnStack.Add(new HikingGroup(colony)); }
                     }
                 }
-                // на куче
-                //foreach (var stack in stacks)
-                //{
-                //    // набросок функций
-                //    Console.WriteLine($"\nдействия на куче: {stack.number}");
-                //    stack.antsFight();
-                //    stack.antsTake();
-                //}
-                //// вывод просто дебаг инфы
-                //foreach (var stack in stacks)
-                //{
-                //    Console.WriteLine();
-                //    stack.aboutAntsOnStack();
-                //}
+                //на куче
+                foreach (var stack in stacks)
+                {
+                    stack.antsFight();
+                    stack.antsTake();
+                }
+
+                // вывод инфы:
+                // С колонии «name» отправились..
+                foreach (var stack in stacks)
+                {
+                    Console.WriteLine();
+                    stack.aboutAntsOnStack();
+                }
             }
 
             void returnHome(List<Colony> colonies, int day)
             {
-                foreach (var colony in colonies)
+                foreach (var colony in colonies.ToArray())
                 {
                     foreach (var stack in stacks)
                     {
-                        colony.warriors = (stack.returnWarriors(colony.color) != null) ? stack.returnWarriors(colony.color) : new List<Warrior> { };
-                        colony.workers = (stack.returnWorkers(colony.color) != null) ? stack.returnWorkers(colony.color) : new List<Worker> { };
-                        //foreach (var worker in colony.workers)
-                        //{
-                        //    worker.putResource();
-                        //}
-                        colony.special = (stack.returnSpecials(colony.color) != null) ? stack.returnSpecials(colony.color) : new List<Insect> { };
-                        //colony.special.putResource();
+                        colony.warriors = stack.returnWarriors(colony.color);
+                        colony.workers = stack.returnWorkers(colony.color);
+                        stack.collectResources(colony.color, colony.resources);
+                        stack.getLosses(colony.color, colony);
+                        colony.special = stack.returnSpecials(colony.color);
                         if (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                         {
                             break;
                         }
                     }
-                    // если идут зеленые и красные то у них нет союзников. как быть? ошибка
+                    colony.aboutReturn();
                     larvaeGrowth(colony.queen, day);
                 }
-                // выросли личинки
-                
             }
 
             // основной код
-            for (int day = 1; day <= Global.DRY_TIME; day++)
+            for (int day = 1; day <= Global.DRY_TIME-7; day++)
             {
                 Console.WriteLine($"\nдень - {day}");
                 //foreach (var colony in Global.colonies.GetRange(0, 2))
                 //{
                 //    larvaeGrowth(colony.queen, day);
                 //}
+                screen3(day);
                 Console.WriteLine("\n\n");
                 //screen1(day);
                 //screen2();
             }
-            screen3(3);
             //Console.WriteLine("++++++до");
             //k3.about();
             //colony1.workers[12].takeResource(k3.stackResources);
@@ -982,14 +1033,13 @@ namespace ants_colony_2
             //Warrior w = (Warrior)insects[0];
             //w.about();
             // результаты
-            foreach (var colony in Global.colonies)
-            {
-                Console.WriteLine(colony.queen.name);
-                Console.WriteLine(colony.color);
-                colony.population();
-            }
+            //foreach (var colony in Global.colonies)
+            //{
+            //    Console.WriteLine(colony.queen.name);
+            //    Console.WriteLine(colony.color);
+            //    colony.population();
+            //}
             Console.WriteLine(" пришла засуха! ");
-            Console.WriteLine("++++++");
             /*
             //q1.colony = colony1;
             //q1.genAnt();
