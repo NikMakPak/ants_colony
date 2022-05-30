@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ants_colony_2
 {
@@ -15,17 +16,11 @@ namespace ants_colony_2
      */
 
     //TODO:
-    // увеличить количество личинок королевам. изза большие потери - ? выяснить надо ли
-    // странно добавляется шмель и крикет в походы исправить ? вроде пофиксил. понаблюдать
-    
-    // финишный вывод инфы
-
     // сделать особое событие
-
     abstract class Insect
     {
         public int dmg;
-        public double hp, def;
+        public double hp, effectHp, def;
         public string type;
         public Colony colony;
         public Random rand = new Random(DateTime.Now.Millisecond);
@@ -34,6 +29,7 @@ namespace ants_colony_2
         {
             this.type = type;
             this.def = def;
+            this.effectHp = hp;
             this.hp = hp + def;
             this.dmg = dmg;
         }
@@ -49,14 +45,13 @@ namespace ants_colony_2
 
         public void updHP()
         {
-            this.hp += this.def;
+            this.hp = this.def + this.effectHp;
         }
 
         public virtual void about()
         {
-            Console.WriteLine($"\n==========={GetType().Name}===========");
-            Console.WriteLine($"здоровье = {hp}, защита = {def}, урон = {dmg}");
         }
+        
     }
     class Queen : Insect
     {
@@ -76,12 +71,12 @@ namespace ants_colony_2
 
         public override void about()
         {
-            base.about();
-            Console.WriteLine($"Имя: {name}");
+            Console.Write($"Королева '{name}': ");
+            Global.printLifeChars(this);
         }
         public void genLarvae()
         {
-            larvaeNumber = rand.Next(3, 8);
+            larvaeNumber = rand.Next(8, 16);
         }
         public void addAntToColony(string antType)
         {
@@ -105,7 +100,7 @@ namespace ants_colony_2
                     else
                     {
                         //Console.WriteLine("-------------------");
-                        Colony c = Global.genColony("", qKid, 12, 9, colony.specialPrototype[0]);
+                        Colony c = Global.genColony("", qKid, 12, 9, colony.specialPrototype[0], colony.specialPrototype[0].GetType().Name);
                         c.friendColonies.Add(colony);
                         colony.friendColonies.Add(c);
                         //Console.WriteLine(qKid.colony);
@@ -194,15 +189,14 @@ namespace ants_colony_2
             this.dmg = 0;
             this.countElems = countElems;
         }
+
         public override void about()
         {
-            base.about();
-            Console.WriteLine("----------take elems");
-            foreach (var item in takeElems)
-            {
-                Console.WriteLine(item);
-            }
+            Console.WriteLine($"Тип: {type}");
+            Global.printLifeChars(this);
+            Console.WriteLine($"--Королева '{colony.queen.name}'");
         }
+
         public void takeResource(List<int> resources, List<int> groupResources)
         {
             for (int i = 0; i < countElems; i++)
@@ -238,6 +232,14 @@ namespace ants_colony_2
             this.biteCount = biteCount;
             this.targetCount = targetCount;
         }
+
+        public override void about()
+        {
+            Console.WriteLine($"Тип: {type}");
+            Global.printLifeChars(this);
+            Console.WriteLine($"--Королева '{colony.queen.name}'");
+        }
+
         public void attack(HikingGroup attackingGroup,HikingGroup enemyGroup)
         {
             antFight();
@@ -345,7 +347,7 @@ namespace ants_colony_2
                         }
                         counterAttackingAnt.hp = 0;
                         break;
-                    case "трудолюбивый обычный агрессивный аномальный сонный":
+                    case "трудолюбивый обычный агрессивный аномальный сонный - Сверчок":
                         subtractHP(((Cricket)counterAttackingAnt).biteCount, ((Cricket)counterAttackingAnt).dmg);
                         break;
                     default:
@@ -380,21 +382,34 @@ namespace ants_colony_2
             this.takeResource = takeResource;
         }
 
-        
+        public override void about()
+        {
+            Console.WriteLine($"Тип: {type}");
+            Global.printLifeChars(this);
+            Console.WriteLine($"--Королева '{colony.queen.name}'");
+        }
     }
 
     class Cricket : Insect
     {
         public string[] canTakeResource = { "3", "2" };
-        public bool canBeAttacked = true;
-        public int targetCount, biteCount;
+        public bool canBeAttacked = true, asleep = false;
+        public int targetCount, biteCount, dayOfAsleep;
         public string modifier;
+        public double saved_hp;
         public Cricket(int hp, int def, int dmg, string type, bool canBeAttacked, int targetCount, int biteCount, string modifier) : base(type, hp, def, dmg)
         { 
             this.modifier = modifier;
             this.canBeAttacked = canBeAttacked;
             this.targetCount = targetCount;
             this.biteCount = biteCount;
+        }
+
+        public override void about()
+        {
+            Console.WriteLine($"Тип: {type}");
+            Global.printLifeChars(this);
+            Console.WriteLine($"--Королева '{colony.queen.name}'");
         }
 
         public void attackOurs(HikingGroup enemyGroup)
@@ -425,6 +440,29 @@ namespace ants_colony_2
                 }
             }
         }
+
+        public void fallAsleep(int day)
+        {
+            if (rand.Next(100)>70)
+            {
+                if (asleep == false)
+                {
+                    saved_hp = hp;
+                    hp = 0;
+                    asleep = true;
+                    dayOfAsleep = day;
+                }
+            }
+            else
+            {
+                if (asleep == true && (day == dayOfAsleep + 1))
+                {
+                    hp = saved_hp;
+                    asleep = false;
+                }
+            }
+            
+        }
     }
 
     class Stack
@@ -446,13 +484,13 @@ namespace ants_colony_2
         {
             foreach (var group in groupsOnStack)
             {
-                Console.WriteLine($"- C колонии '{group.color}' отправились: р={group.workers.Count}, в={group.warriors.Count}, о={group.special.Count} на кучу {number}");
+                Console.WriteLine($"-- C колонии '{group.color}' отправились: р={group.workers.Count}, в={group.warriors.Count}, о={group.special.Count} на кучу {number}");
             }
         }
 
         public void about()
         {
-            if (stackResources.Sum() > 0)
+            if (!isExhausted)
             {
                 Console.WriteLine($"Куча { number}: " + (stackResources[0] == 0 ? "" : $"веточка: {stackResources[0]}; ") + (stackResources[1] == 0 ? "" : $"камушек: {stackResources[1]}; ") + (stackResources[2] == 0 ? "" : $"росинка: {stackResources[2]};"));
             }
@@ -502,53 +540,73 @@ namespace ants_colony_2
             }
         }
 
-        public List<Warrior> returnWarriors(string color)
+        public void returnWarriors(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
                 if (group.color == color)
                 {
-                    return group.warriors.FindAll(x => (x.hp != 0));
+                    foreach (var war in group.warriors.FindAll(x => (x.hp != 0)))
+                    {
+                        colony.warriors.Add(war);
+                    }
                 }
             }
-            return new List<Warrior> { };
         }
 
-        public List<Worker> returnWorkers(string color)
+        public void returnWorkers(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
                 if (group.color == color)
                 {
-                    return group.workers.FindAll(x => (x.hp != 0));
+                    foreach (var work in group.workers.FindAll(x => (x.hp != 0)))
+                    {
+                        colony.workers.Add(work);
+                    }
                 }
             }
-            return new List<Worker> { };
         }
-        public List<Insect> returnSpecials(string color)
+        public void returnSpecials(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
                 if (group.color == color)
                 {
-                    return group.special.FindAll(x => (x.hp != 0));
+                    foreach (var spec in group.special.FindAll(x => (x.hp != 0)))
+                    {
+                        colony.special.Add(spec);
+                    }
                 }
             }
-            return new List<Insect> { };
         }
 
-        public void antsTake()
+        public void antsTake(int day)
         {
             foreach (var group in groupsOnStack)
             {
-                foreach (var worker in group.workers)
+                foreach (var worker in group.workers.FindAll(x => (x.hp != 0)))
                 {
-                    worker.takeResource(stackResources, group.groupResources);
+                    // особенность мурав старший забывчивый
+                    if (worker.type == "старший забывчивый")
+                    {
+                        if (rand.Next(100)<70)
+                        {
+                            worker.takeResource(stackResources, group.groupResources);
+                        }
+                    }
+                    else
+                    {
+                        worker.takeResource(stackResources, group.groupResources);
+                    }
+                    
                 }
-                foreach (var special in group.special)
+                foreach (var special in group.special.FindAll(x => (x.hp != 0)))
                 {
+                    // особенность сверчка засыпание
                     if (special.dmg>0)
                     {
+                        ((Cricket)special).fallAsleep(day);
                         ((Cricket)special).takeResource(stackResources, group.groupResources);
                     }
                 }
@@ -559,30 +617,42 @@ namespace ants_colony_2
                 isExhausted = true;
             }
         }
-
-        public void collectResources(string color, List<int> colonyResources)
+        
+        public void collectResources(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
                 if (group.color == color)
                 {
-                    for (int i = 0; i < colonyResources.Count; i++)
+                    for (int i = 0; i < colony.resources.Count; i++)
                     {
-                        colonyResources[i] += group.groupResources[i];
+                        colony.resources[i] += group.groupResources[i];
+                        colony.gapRes[i] += group.groupResources[i];
                     }
                 }
             }
         }
-
         public void getLosses(string color,Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
                 if (group.color == color)
                 {
-                    colony.losses = group.losses;
+                    for (int i = 0; i < group.losses.Count; i++)
+                    {
+                        colony.losses[i] += group.losses[i];
+                    }
                 }
             }
+        }
+
+        public void cleanGroups()
+        {
+            for (int i = 0; i < groupsOnStack.Count; i++)
+            {
+                groupsOnStack[i] = null;
+            }
+            groupsOnStack.Clear();
         }
     }
     class HikingGroup
@@ -724,10 +794,16 @@ namespace ants_colony_2
         public List<Colony> friendColonies = new List<Colony> { };
         public Queen queen;
         public List<Warrior> warriors;
+        public List<string> warTypes = new List<string>();
+        public List<string> workTypes = new List<string>();
+        public List<string> specTypes = new List<string>();
         public List<Worker> workers;
         public List<Insect> special;
         public List<Insect> specialPrototype;
+        public Cricket cricketPrint;
+        public Bumblebee bumblePrint;
         public List<int> resources = new List<int>{ 0, 0, 0, 0 };
+        public List<int> gapRes = new List<int> { 0, 0, 0, 0 };
         public List<int> losses = new List<int> { 0,0,0};
         public Random rand = new Random(DateTime.Now.Millisecond);
 
@@ -738,11 +814,16 @@ namespace ants_colony_2
             workers = genWorkers(count_R);
             warriors = genWarriors(count_W);
             this.special = new List<Insect> { special };
+            specTypes.Add(special.type);
             this.specialPrototype = new List<Insect> { special };
         }
         public List<Worker> genWorkers(int count)
         {
             List<Worker> antExamples = Global.getAntsExamples_Worker(color);
+            foreach (var ant in antExamples)
+            {
+                workTypes.Add(ant.type);
+            }
             List<Worker> workers = new List<Worker>();
             for (int j = 0; j < count; j++)
             {
@@ -754,6 +835,10 @@ namespace ants_colony_2
         public List<Warrior> genWarriors(int count)
         {
             List<Warrior> antExamples = Global.getAntsExamples_Warrior(color);
+            foreach (var ant in antExamples)
+            {
+                warTypes.Add(ant.type);
+            }
             List<Warrior> warriors = new List<Warrior>();
             for (int j = 0; j < count; j++)
             {
@@ -764,10 +849,79 @@ namespace ants_colony_2
         }
         public void info()
         {
-            Console.WriteLine($"Колония {color}:\n--Королева: {queen.name}, личинок: {queen.larvaeNumber}");
-            Console.WriteLine($"Колония {color} дружит с {friendColonies[0].color}");
-            Console.WriteLine($"--Ресурсы: в={resources[0]} к={resources[1]} р={resources[2]} л={resources[3]}");
+            Console.WriteLine($"Колония '{color}':\n--Королева: {queen.name}, личинок: {queen.larvaeNumber}");
+            Console.WriteLine($"--Ресурсы: в={resources[0]}, к={resources[1]}, р={resources[2]}, л={resources[3]}");
+            Console.WriteLine($"--Популяция {workers.Count + warriors.Count + special.Count}: р={workers.Count}, в={warriors.Count}, о={special.Count}\n");
         }
+
+        public void colonyInfo()
+        {
+            Console.WriteLine($"Колония '{color}':");
+            queen.about();
+            Console.WriteLine($"--Ресурсы: в={resources[0]}, к={resources[1]}, р={resources[2]}, л={resources[3]}\n");
+            if (workers.Count!= 0)
+            {
+                Console.WriteLine("<<<<<<<<<<<<< Рабочие >>>>>>>>>>>>>");
+            }
+            foreach (var type in workTypes)
+            {
+                var ant = workers.Find(x => x.type == type);
+                if (ant != null)
+                {
+                    Console.WriteLine($"Тип: {type}");
+                    Console.Write($"--Параметры: ");
+                    Global.printLifeChars(ant);
+                    Console.WriteLine($"--Количество: {workers.FindAll(x => x.type == type).Count}\n");
+                }
+            }
+            if (warriors.Count != 0)
+            {
+                Console.WriteLine("<<<<<<<<<<<<< Воины >>>>>>>>>>>>>");
+            }
+            foreach (var type in warTypes)
+            {
+                var ant = warriors.Find(x => x.type == type);
+                if (ant!=null)
+                {
+                    Console.WriteLine($"Тип: {type}");
+                    Console.Write($"--Параметры: ");
+                    Global.printLifeChars(ant);
+                    Console.WriteLine($"--Модификатор: <{ant.modifier}>");
+                    Console.WriteLine($"--Количество: {warriors.FindAll(x => x.type == type).Count}\n");
+                }
+            }
+            if (special.Count != 0)
+            {
+                Console.WriteLine("<<<<<<<<<<<<< Особые >>>>>>>>>>>>>");
+            }
+            if (cricketPrint!=null)
+            {
+                Console.WriteLine($"Тип: {cricketPrint.type}");
+                Console.Write($"--Параметры: ");
+                Global.printLifeChars(cricketPrint);
+                string[] mods = cricketPrint.modifier.Split(';');
+                Console.WriteLine("--Модификаторы:");
+                foreach (string mod in mods)
+                {
+                    Console.WriteLine($"--{mod};");
+                }
+                Console.WriteLine($"--Количество: {special.Count}\n");
+            }
+            else
+            {
+                Console.WriteLine($"Тип: {bumblePrint.type}");
+                Console.Write($"--Параметры: ");
+                Global.printLifeChars(bumblePrint);
+                string[] mods = bumblePrint.modifier.Split(';');
+                Console.WriteLine("--Модификаторы:");
+                foreach (string mod in mods)
+                {
+                    Console.WriteLine($"--{mod};");
+                }
+                Console.WriteLine($"--Количество: {special.Count}\n");
+            }
+        }
+
         public bool isFriend(HikingGroup target)
         {
             foreach (var colony in friendColonies)
@@ -779,10 +933,7 @@ namespace ants_colony_2
             }
             return false;
         }
-        public void population()
-        {
-            Console.WriteLine($"--Популяция {workers.Count + warriors.Count + special.Count}: р={workers.Count} в={warriors.Count} о={special.Count}\n");
-        }
+       
         //public int getResourcesSum()
         //{
         //    int sum = 0;
@@ -794,14 +945,19 @@ namespace ants_colony_2
         //}
         public void antInfo()
         {
-
             Console.WriteLine("в разработке");
         }
         public void aboutReturn()
         {
             Console.WriteLine($"В колонию '{color}' вернулись:");
-            Console.WriteLine($"--р={workers.Count}, в={warriors.Count}, о={special.Count}\n--Добыто ресурсов: в={resources[0]}, к={resources[1]}, р={resources[2]}, л={resources[3]}");
+            Console.WriteLine($"--р={workers.Count}, в={warriors.Count}, о={special.Count}\n--Добыто ресурсов: в={gapRes[0]}, к={gapRes[1]}, р={gapRes[2]}, л={gapRes[3]}");
             Console.WriteLine($"--Потери: р={losses[0]} в={losses[1]} о={losses[2]}");
+        }
+
+        public void reset()
+        {
+            losses = new List<int> { 0, 0, 0 };
+            gapRes = new List<int> { 0, 0, 0, 0 };
         }
     }
     class Global
@@ -812,6 +968,10 @@ namespace ants_colony_2
         static public int DRY_TIME = 12;
         static public List<Colony> colonies = new List<Colony> { };
         static public Random rand = new Random(DateTime.Now.Millisecond);
+        static public void printLifeChars(Insect ant)
+        {
+            Console.WriteLine($"здоровье={ant.effectHp}, защита={ant.def}, урон={ant.dmg}");
+        }
         static public List<Worker> getAntsExamples_Worker(string qName)
         {
             if (qName == "Феодора")
@@ -854,13 +1014,23 @@ namespace ants_colony_2
             return new QueenDoughter("", name, mother.hp, mother.def, mother.dmg, mother.growthCycle, mother.queensLimit, mother);
         }
 
-        static public Colony genColony(string color, Queen queen, int count_R, int count_W, Insect special)
+        static public Colony genColony(string color, Queen queen, int count_R, int count_W, Insect special, string insType)
         {
             string chosenColor = colonyColors[rand.Next(colonyColors.Count)];
             colonyColors.Remove(chosenColor);
             Colony colony = new Colony((color == "") ? chosenColor : color, queen, count_R, count_W, special);
             queen.colony = colony;
             special.colony = colony;
+
+            if (insType == "Bumblebee")
+            {
+                colony.bumblePrint = (Bumblebee)special;
+            }
+            else
+            {
+                colony.cricketPrint = (Cricket)special;
+            }
+
             foreach (var warrior in colony.warriors)
             {
                 warrior.colony = colony;
@@ -907,40 +1077,61 @@ namespace ants_colony_2
             // зеленые
             Queen queen1 = new Queen("", "Феодора", 16, 6, 25, rand.Next(2, 6), 3);
             // сделать вывод модификатара по строчкам с помощью split(";")
-            Bumblebee shmel = new Bumblebee(26, 8, 0, "ленивый обычный мирный заботливый", true, false, "не может брать ресурсы; может быть атакован войнами; зашита всех в походе увеличена в двое");
-            Colony colony1 = Global.genColony("зеленые", queen1, 12, 8, shmel);
+            Bumblebee shmel = new Bumblebee(26, 8, 0, "ленивый обычный мирный заботливый - Шмель", true, false, "не может брать ресурсы; может быть атакован войнами; зашита всех в походе увеличена в двое");
+            Colony colony1 = Global.genColony("зеленые", queen1, 12, 8, shmel, shmel.GetType().Name);
 
             // красные
             Queen queen2 = new Queen("", "Маргрете", 15, 9, 17, rand.Next(3, 5), 4);
             // сделать вывод модификатара по строчкам с помощью split(";")
-            Cricket sverhok = new Cricket(21, 5, 8, "трудолюбивый обычный агрессивный аномальный сонный", true, 2, 1, "может брать ресурсы (3 ресурса: росинка); может быть атакован войнами; атакует врагов(2 цели за раз и наносит 1 укус); атакует своих вместо врагов; по пути в колонию может уснуть и вернуться на следующий день");
-            Colony colony2 = Global.genColony("красные", queen2, 12, 9, sverhok);
+            Cricket sverhok = new Cricket(21, 5, 8, "трудолюбивый обычный агрессивный аномальный сонный - Сверчок", true, 2, 1, "может брать ресурсы (3 ресурса: росинка); может быть атакован войнами; атакует врагов(2 цели за раз и наносит 1 укус); атакует своих вместо врагов; по пути в колонию может уснуть и вернуться на следующий день");
+            Colony colony2 = Global.genColony("красные", queen2, 12, 9, sverhok, sverhok.GetType().Name);
+
+            // основной код
+            Console.WriteLine(" Задайте время выдержки вывода (в млсекундах, например - 1000 или 0)");
+            int userSec = Convert.ToInt32(Console.ReadLine());
+            for (int day = 1; day <= Global.DRY_TIME; day++)
+            {
+                Console.WriteLine("\n\t\t\t\t\t#################");
+                Console.WriteLine($"\t\t\t\tДень {day} (до засухи осталось {Global.DRY_TIME + 1 - day} д.)");
+                screen1(day, Global.colonies);
+                screen2_3Manager();
+                screen4(day);
+                wait(userSec);
+                Console.WriteLine("\n");
+                //screen1(day);
+                //screen2();
+            }
 
             // функции 
-            void screen1(int day)
+            void screen1(int day, List<Colony> colonies)
             {
+                // инфо о колонии
                 Console.WriteLine("\nЭкран 1 – Начало хода\n---------------------------------");
-                Console.WriteLine($"День: {day} (до засухи осталось {Global.DRY_TIME - day} дней)");
-                colony1.info();
-                colony1.population();
-                colony2.info();
-                colony2.population();
+                foreach (var colony in colonies)
+                {
+                    colony.info();
+                }
+
+                // инфо о кучах
                 foreach (var item in stacks)
                 {
                     item.about();
                 }
+                Console.WriteLine(" Глоб эфект в разрабе..");
                 // глобальный эфект
             }
-            void screen2()
+            void screen2(string color)
             {
-                Console.WriteLine("\nЭкран 2 – Информация по колонии\n---------------------------------");
-                colony1.antInfo();
-
+                foreach (var c in Global.colonies)
+                {
+                    if (c.color == color)
+                        c.colonyInfo();
+                }
             }
-            void screen3(int day)
+            void screen4(int day)
             {
-                Console.WriteLine("\nЭкран 3 - Поход\n---------------------------------\nНачало дня:");
-                goHiking(Global.colonies);
+                Console.WriteLine("\nЭкран 4 - Поход\n---------------------------------\nНачало дня:");
+                goHiking(Global.colonies, day);
 
                 Console.WriteLine("\nКонец дня:");
                 returnHome(Global.colonies, day);
@@ -957,11 +1148,12 @@ namespace ants_colony_2
                 }
             }
 
-            void goHiking(List<Colony> colonies)
+            void goHiking(List<Colony> colonies, int day)
             {
                 // отправка муравьев на кучи
                 foreach (var colony in colonies)
                 {
+                    colony.reset();
                     while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                     {
                         Stack target = stacks.FindAll(x => (x.isExhausted==false))[rand.Next(stacks.FindAll(x => (x.isExhausted == false)).Count)];
@@ -977,14 +1169,13 @@ namespace ants_colony_2
                 foreach (var stack in stacks)
                 {
                     stack.antsFight();
-                    stack.antsTake();
+                    stack.antsTake(day);
                 }
 
                 // вывод инфы:
                 // С колонии «name» отправились..
                 foreach (var stack in stacks)
                 {
-                    Console.WriteLine();
                     stack.aboutAntsOnStack();
                 }
             }
@@ -995,34 +1186,130 @@ namespace ants_colony_2
                 {
                     foreach (var stack in stacks)
                     {
-                        colony.warriors = stack.returnWarriors(colony.color);
-                        colony.workers = stack.returnWorkers(colony.color);
-                        stack.collectResources(colony.color, colony.resources);
+                        stack.returnWarriors(colony.color, colony);
+                        stack.returnWorkers(colony.color, colony);
+                        stack.collectResources(colony.color, colony);
                         stack.getLosses(colony.color, colony);
-                        colony.special = stack.returnSpecials(colony.color);
-                        if (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
-                        {
-                            break;
-                        }
+                        stack.returnSpecials(colony.color, colony);
                     }
                     colony.aboutReturn();
                     larvaeGrowth(colony.queen, day);
                 }
+                foreach (var stack in stacks)
+                {
+                    stack.cleanGroups();
+                }
+            }
+            void screen2_3Manager()
+            {
+                while (true)
+                {
+                    Console.WriteLine("\nЭкран 2 – Информация по колонии:\n---------------------------------");
+                    Console.WriteLine("Выберите цвет колонии:");
+                    foreach (var c in Global.colonies)
+                    {
+                        Console.WriteLine($"\t- {c.color}");
+                    }
+                    Console.WriteLine("\t- Для выхода введите 0");
+                    string userColonyColor = Console.ReadLine();
+                    if (userColonyColor == "0")
+                    {
+                        wait(userSec);
+                        break;
+                    }
+                    screen2(userColonyColor);
+                    wait(userSec);
+                    screen3Manager(userColonyColor);
+                }
             }
 
-            // основной код
-            for (int day = 1; day <= Global.DRY_TIME-7; day++)
+            void screen3Manager(string userColonyColor)
             {
-                Console.WriteLine($"\nдень - {day}");
-                //foreach (var colony in Global.colonies.GetRange(0, 2))
-                //{
-                //    larvaeGrowth(colony.queen, day);
-                //}
-                screen3(day);
-                Console.WriteLine("\n\n");
-                //screen1(day);
-                //screen2();
+                Console.WriteLine($"\nЭкран 3 – Информация по муравью в колонии '{userColonyColor}':\n---------------------------------");
+                Colony chosenC = Global.colonies.Find(x => x.color == userColonyColor);
+                string userAnt = "";
+                while (userAnt != "0")
+                {
+                    Console.WriteLine("Выберите тип муравья:");
+                    Console.WriteLine($"\t- 1 ~ Воин\n\t- 2 ~ Рабочий\n\t- 3 ~ Особенное\n\t- 4 ~ Королева");
+                    Console.WriteLine("\t- 0 ~ Выход");
+                    userAnt = Console.ReadLine();
+                    switch (userAnt)
+                    {
+                        case "1":
+                            foreach (var war in chosenC.warriors)
+                            {
+                                
+                                war.about();
+                            }
+                            errorCheckPrint(chosenC.warriors.Count);
+                            break;
+                        case "2":
+                            foreach (var work in chosenC.workers)
+                            {
+                                
+                                work.about();
+                            }
+                            errorCheckPrint(chosenC.workers.Count);
+                            break;
+                        case "3":
+                            
+                            foreach (var spec in chosenC.special)
+                            {
+                                
+                                if (chosenC.bumblePrint != null)
+                                {
+                                    
+                                    ((Bumblebee)spec).about();
+                                }
+                                else
+                                {
+                                    ((Cricket)spec).about();
+                                }
+                            }
+                            errorCheckPrint(chosenC.special.Count);
+                            break;
+                        case "4":
+                            chosenC.queen.about();
+                            break;
+                        default:
+                            Console.WriteLine("\nнеизвестное имя");
+                            break;
+                        case "0":
+                            break;
+                    }
+                    Console.WriteLine();
+                    wait(userSec);
+
+                    
+                    //string userColonyColor = Console.ReadLine();
+                    //if (userColonyColor == "0")
+                    //{
+                    //    wait();
+                    //    break;
+                    //}
+
+                    //wait();
+                    //screen2(userColonyColor);
+                    //wait();
+                    //screen3Manager(userColonyColor);
+                }
             }
+
+            void errorCheckPrint(int antsCount)
+            {
+                if (antsCount==0)
+                {
+                    Console.WriteLine("\n\t..Все муравьи данного типа мертвы..");
+                }
+            }
+
+            void wait(int sec)
+            {
+                Thread.Sleep(sec);
+            }
+
+            
             //Console.WriteLine("++++++до");
             //k3.about();
             //colony1.workers[12].takeResource(k3.stackResources);
