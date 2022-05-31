@@ -1231,8 +1231,8 @@ namespace ants_colony_2
                     maxResColony.Add(colony.color, colony.getResourcesSum());
                     
                 }
-                Console.WriteLine("\n\t\t\t\t\t#################");
-                Console.WriteLine($"\t\t\tВыжила колония '{maxResColony.OrderByDescending(x => x.Value).First().Key}', набравшая суммарно {maxResColony.OrderByDescending(x => x.Value).First().Value}");
+                Console.WriteLine("\n\t\t\t\t\t##################");
+                Console.WriteLine($"\t\t\tВыжила колония '{maxResColony.OrderByDescending(x => x.Value).First().Key}', набравшая суммарно {maxResColony.OrderByDescending(x => x.Value).First().Value} ресурсов");
             }
 
             void screen1(int day, List<Colony> colonies)
