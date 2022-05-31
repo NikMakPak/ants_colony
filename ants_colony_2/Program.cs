@@ -37,7 +37,7 @@ namespace ants_colony_2
         public void subtractHP(int biteCount, double dmg)
         {
             hp -= biteCount * dmg;
-            if (hp<0)
+            if (hp < 0)
             {
                 hp = 0;
             }
@@ -51,7 +51,7 @@ namespace ants_colony_2
         public virtual void about()
         {
         }
-        
+
     }
     class Queen : Insect
     {
@@ -193,10 +193,10 @@ namespace ants_colony_2
         {
             for (int i = 0; i < countElems; i++)
             {
-                if (countElems == 1 && takeElems.Length>1)
+                if (countElems == 1 && takeElems.Length > 1)
                 {
                     int randRes = rand.Next(2);
-                    if (resources[Convert.ToInt32(takeElems[randRes])] !=0)
+                    if (resources[Convert.ToInt32(takeElems[randRes])] != 0)
                     {
                         resources[Convert.ToInt32(takeElems[randRes])] -= 1;
                         groupResources[Convert.ToInt32(takeElems[randRes])] += 1;
@@ -204,7 +204,7 @@ namespace ants_colony_2
                 }
                 else
                 {
-                    if (resources[Convert.ToInt32(takeElems[i])] !=0)
+                    if (resources[Convert.ToInt32(takeElems[i])] != 0)
                     {
                         resources[Convert.ToInt32(takeElems[i])] -= 1;
                         groupResources[Convert.ToInt32(takeElems[i])] += 1;
@@ -238,7 +238,7 @@ namespace ants_colony_2
                         List<Worker> aliveEnemyWork = enemyGroup.workers.FindAll(x => (x.hp != 0));
                         if (aliveEnemyWork.Count != 0)
                         {
-                            aliveEnemyWork[rand.Next(aliveEnemyWork.Count)].subtractHP(1,1);
+                            aliveEnemyWork[rand.Next(aliveEnemyWork.Count)].subtractHP(1, 1);
                         }
                         break;
                     case "Bumblebee":
@@ -246,7 +246,7 @@ namespace ants_colony_2
                         if (aliveEnemyB.Count != 0)
                         {
                             Bumblebee enemyB = (Bumblebee)aliveEnemyB[rand.Next(aliveEnemyB.Count)];
-                            enemyB.subtractHP(1,1);
+                            enemyB.subtractHP(1, 1);
                         }
                         break;
                     case "Cricket":
@@ -254,7 +254,7 @@ namespace ants_colony_2
                         if (aliveEnemyC.Count != 0)
                         {
                             Cricket enemyC = (Cricket)aliveEnemyC[rand.Next(aliveEnemyC.Count)];
-                            enemyC.subtractHP(1,1);
+                            enemyC.subtractHP(1, 1);
                             if (rand.Next(10) > 5)
                             {
                                 counterAttack(enemyC);
@@ -307,7 +307,7 @@ namespace ants_colony_2
         public int targetCount, biteCount;
         public string modifier;
 
-        public Warrior(string type, string modifier ,  int hp, int def, int dmg, int targetCount, int biteCount) : base(type, hp, def, dmg)
+        public Warrior(string type, string modifier, int hp, int def, int dmg, int targetCount, int biteCount) : base(type, hp, def, dmg)
         {
             this.modifier = modifier;
             this.biteCount = biteCount;
@@ -321,10 +321,10 @@ namespace ants_colony_2
             Console.WriteLine($"--Королева '{colony.queen.name}'");
         }
 
-        public void attack(HikingGroup attackingGroup,HikingGroup enemyGroup)
+        public void attack(HikingGroup attackingGroup, HikingGroup enemyGroup)
         {
             antFight();
-            void antFight(bool flag=false)
+            void antFight(bool flag = false)
             {
                 List<string> antsExample = enemyGroup.getAntTypes();
                 string antType = antsExample[rand.Next(antsExample.Count)];
@@ -447,7 +447,7 @@ namespace ants_colony_2
                 }
             }
         }
-        
+
     }
     class Bumblebee : Insect
     {
@@ -478,7 +478,7 @@ namespace ants_colony_2
         public string modifier;
         public double saved_hp;
         public Cricket(int hp, int def, int dmg, string type, bool canBeAttacked, int targetCount, int biteCount, string modifier) : base(type, hp, def, dmg)
-        { 
+        {
             this.modifier = modifier;
             this.canBeAttacked = canBeAttacked;
             this.targetCount = targetCount;
@@ -499,7 +499,7 @@ namespace ants_colony_2
             List<Insect> eAll = new List<Insect> { };
             eAll.AddRange(eWar);
             eAll.AddRange(eWork);
-            if (eAll.Count!=0)
+            if (eAll.Count != 0)
             {
                 for (int i = 0; i < targetCount; i++)
                 {
@@ -523,7 +523,7 @@ namespace ants_colony_2
 
         public void fallAsleep(int day)
         {
-            if (rand.Next(100)>70)
+            if (rand.Next(100) > 70)
             {
                 if (asleep == false)
                 {
@@ -541,7 +541,7 @@ namespace ants_colony_2
                     asleep = false;
                 }
             }
-            
+
         }
     }
     class Stack
@@ -578,14 +578,14 @@ namespace ants_colony_2
             {
                 Console.WriteLine($"Куча {number}: истощена");
             }
-            if (cicadaOnStack!= null)
+            if (cicadaOnStack != null)
             {
                 cicadaOnStack.about(day);
             }
         }
         public HikingGroup getEnemyGroup(HikingGroup attacking, List<HikingGroup> otherGroups)
         {
-            List < HikingGroup > enemies = new List < HikingGroup> { };
+            List<HikingGroup> enemies = new List<HikingGroup> { };
             for (int i = 0; i < otherGroups.Count; i++)
             {
                 // проверка на союзы
@@ -594,7 +594,7 @@ namespace ants_colony_2
                     enemies.Add(otherGroups[i]);
                 }
             }
-            return (enemies.Count!=0) ? enemies[rand.Next(enemies.Count)] : null;
+            return (enemies.Count != 0) ? enemies[rand.Next(enemies.Count)] : null;
         }
         public void antsFight()
         {
@@ -611,7 +611,7 @@ namespace ants_colony_2
                 {
                     foreach (var attackingAnt in attackingGroup.warriors)
                     {
-                        attackingAnt.attack(attackingGroup,enemyGroup);
+                        attackingAnt.attack(attackingGroup, enemyGroup);
                     }
 
                     if (cicadaOnStack != null)
@@ -680,7 +680,7 @@ namespace ants_colony_2
                     // особенность мурав старший забывчивый
                     if (worker.type == "старший забывчивый")
                     {
-                        if (rand.Next(100)<70)
+                        if (rand.Next(100) < 70)
                         {
                             worker.takeResource(stackResources, group.groupResources);
                         }
@@ -689,25 +689,25 @@ namespace ants_colony_2
                     {
                         worker.takeResource(stackResources, group.groupResources);
                     }
-                    
+
                 }
                 foreach (var special in group.special.FindAll(x => (x.hp != 0)))
                 {
                     // особенность сверчка засыпание
-                    if (special.dmg>0)
+                    if (special.dmg > 0)
                     {
                         ((Cricket)special).fallAsleep(day);
                         ((Cricket)special).takeResource(stackResources, group.groupResources);
                     }
                 }
             }
-            
-            if (stackResources[0]+ stackResources[1] + stackResources[2] + stackResources[3]==0)
+
+            if (stackResources[0] + stackResources[1] + stackResources[2] + stackResources[3] == 0)
             {
                 isExhausted = true;
             }
         }
-        
+
         public void collectResources(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
@@ -722,7 +722,7 @@ namespace ants_colony_2
                 }
             }
         }
-        public void getLosses(string color,Colony colony)
+        public void getLosses(string color, Colony colony)
         {
             foreach (var group in groupsOnStack)
             {
@@ -752,7 +752,7 @@ namespace ants_colony_2
         public List<Warrior> warriors;
         public List<Worker> workers;
         public List<Insect> special;
-        public List<int> groupResources = new List<int>{0,0,0,0};
+        public List<int> groupResources = new List<int> { 0, 0, 0, 0 };
         public Random rand = new Random(DateTime.Now.Millisecond);
         public List<int> losses = new List<int> { 0, 0, 0 };
 
@@ -803,24 +803,24 @@ namespace ants_colony_2
 
         public void aplyBumblebeeEffect()
         {
-           if ((special.FindAll(x => (x.GetType().Name == "Bumblebee"))).Count != 0)
-           {
-               foreach (var war in warriors)
-               {
-                   war.def *= 2;
+            if ((special.FindAll(x => (x.GetType().Name == "Bumblebee"))).Count != 0)
+            {
+                foreach (var war in warriors)
+                {
+                    war.def *= 2;
                     war.updHP();
-               }
-               foreach (var work in workers)
-               {
-                   work.def *= 2;
+                }
+                foreach (var work in workers)
+                {
+                    work.def *= 2;
                     work.updHP();
                 }
-               foreach (var spec in special)
-               {
-                   spec.def *= 2;
+                foreach (var spec in special)
+                {
+                    spec.def *= 2;
                     spec.updHP();
                 }
-           }
+            }
         }
 
         public void cancelBumblebeeEffect()
@@ -870,9 +870,9 @@ namespace ants_colony_2
         public void calcLosses()
         {
             // Р В О
-            losses[0]=(workers.FindAll(x => (x.hp == 0)).Count);
-            losses[1]=(warriors.FindAll(x => (x.hp == 0)).Count);
-            losses[2]=(special.FindAll(x => (x.hp == 0)).Count);
+            losses[0] = (workers.FindAll(x => (x.hp == 0)).Count);
+            losses[1] = (warriors.FindAll(x => (x.hp == 0)).Count);
+            losses[2] = (special.FindAll(x => (x.hp == 0)).Count);
         }
 
     }
@@ -890,9 +890,9 @@ namespace ants_colony_2
         public List<Insect> specialPrototype;
         public Cricket cricketPrint;
         public Bumblebee bumblePrint;
-        public List<int> resources = new List<int>{ 0, 0, 0, 0 };
+        public List<int> resources = new List<int> { 0, 0, 0, 0 };
         public List<int> gapRes = new List<int> { 0, 0, 0, 0 };
-        public List<int> losses = new List<int> { 0,0,0};
+        public List<int> losses = new List<int> { 0, 0, 0 };
         public Random rand = new Random(DateTime.Now.Millisecond);
 
         public Colony(string color, Queen queen, int count_R, int count_W, Insect special)
@@ -947,7 +947,7 @@ namespace ants_colony_2
             Console.WriteLine($"Колония '{color}':");
             queen.about();
             Console.WriteLine($"--Ресурсы: в={resources[0]}, к={resources[1]}, р={resources[2]}, л={resources[3]}\n");
-            if (workers.Count!= 0)
+            if (workers.Count != 0)
             {
                 Console.WriteLine("<<<<<<<<<<<<< Рабочие >>>>>>>>>>>>>");
             }
@@ -969,7 +969,7 @@ namespace ants_colony_2
             foreach (var type in warTypes)
             {
                 var ant = warriors.Find(x => x.type == type);
-                if (ant!=null)
+                if (ant != null)
                 {
                     Console.WriteLine($"Тип: {type}");
                     Console.Write($"--Параметры: ");
@@ -982,7 +982,7 @@ namespace ants_colony_2
             {
                 Console.WriteLine("<<<<<<<<<<<<< Особые >>>>>>>>>>>>>");
             }
-            if (cricketPrint!=null)
+            if (cricketPrint != null)
             {
                 Console.WriteLine($"Тип: {cricketPrint.type}");
                 Console.Write($"--Параметры: ");
@@ -1063,14 +1063,16 @@ namespace ants_colony_2
 
         public void about(int day)
         {
-            Console.WriteLine($"\tГлобальный эффект: <{type}> {modifier} (в течение еще {Math.Abs(day - dayOfAppear) + 1})");
+            Console.WriteLine($"\tГлобальный эффект: <{type}> {modifier} (в течение еще {limitDay})");
+            limitDay--;
         }
 
         public bool willAppear(int day)
         {
-            if (rand.Next(100)>60 && !isAppear)
+            if (rand.Next(100) > 60 && !isAppear)
             {
                 isAppear = true;
+                limitDay = 2;
                 dayOfAppear = day;
                 return true;
             }
@@ -1080,7 +1082,7 @@ namespace ants_colony_2
         public bool isLimitDay(int day)
         {
             effectDays -= 1;
-            if (effectDays <= 0 || (Math.Abs(day - dayOfAppear) == limitDay))
+            if (effectDays <= 0 || (Math.Abs(day - dayOfAppear) == 2))
             {
                 return true;
             }
@@ -1090,6 +1092,8 @@ namespace ants_colony_2
         public void disappear()
         {
             isAppear = false;
+            effectDays = 7;
+            limitDay = 2;
         }
     }
     class Global
@@ -1181,7 +1185,7 @@ namespace ants_colony_2
 
             // глобальный эффект
             Cicada cicada = new Cicada("появилась на куче и на ней рабочие начинают атаковать врагов", "Аномальная Певчая-цикада");
-            
+
             // кучи
             // порядок ресурсов: В К Р Л
             Stack k1 = new Stack(1, new int[] { 28, 0, 0, 0 });
@@ -1229,7 +1233,7 @@ namespace ants_colony_2
                 foreach (var colony in colonies)
                 {
                     maxResColony.Add(colony.color, colony.getResourcesSum());
-                    
+
                 }
                 Console.WriteLine("\n\t\t\t\t\t##################");
                 Console.WriteLine($"\t\t\tВыжила колония '{maxResColony.OrderByDescending(x => x.Value).First().Key}', набравшая суммарно {maxResColony.OrderByDescending(x => x.Value).First().Value} ресурсов");
@@ -1274,7 +1278,7 @@ namespace ants_colony_2
                 }
                 else
                 {
-                    Console.WriteLine($"--Выросли: еще растут ({Math.Abs(queen.growthCycle+1 - day)} д.)\n") ;
+                    Console.WriteLine($"--Выросли: еще растут ({Math.Abs(queen.growthCycle + 1 - day)} д.)\n");
                 }
             }
 
@@ -1286,7 +1290,7 @@ namespace ants_colony_2
                     colony.reset();
                     while (colony.warriors.Count + colony.workers.Count + colony.special.Count != 0)
                     {
-                        Stack target = stacks.FindAll(x => (x.isExhausted==false))[rand.Next(stacks.FindAll(x => (x.isExhausted == false)).Count)];
+                        Stack target = stacks.FindAll(x => (x.isExhausted == false))[rand.Next(stacks.FindAll(x => (x.isExhausted == false)).Count)];
                         if (target.groupsOnStack.Find(x => (x.color == colony.color)) != null)
                         {
                             HikingGroup hGroup = target.groupsOnStack.Find((x) => x.color == colony.color);
@@ -1382,7 +1386,7 @@ namespace ants_colony_2
                         case "1":
                             foreach (var war in chosenC.warriors)
                             {
-                                
+
                                 war.about();
                             }
                             errorCheckPrint(chosenC.warriors.Count);
@@ -1390,19 +1394,19 @@ namespace ants_colony_2
                         case "2":
                             foreach (var work in chosenC.workers)
                             {
-                                
+
                                 work.about();
                             }
                             errorCheckPrint(chosenC.workers.Count);
                             break;
                         case "3":
-                            
+
                             foreach (var spec in chosenC.special)
                             {
-                                
+
                                 if (chosenC.bumblePrint != null)
                                 {
-                                    
+
                                     ((Bumblebee)spec).about();
                                 }
                                 else
@@ -1428,7 +1432,7 @@ namespace ants_colony_2
 
             void errorCheckPrint(int antsCount)
             {
-                if (antsCount==0)
+                if (antsCount == 0)
                 {
                     Console.WriteLine("\n\t..Все муравьи данного типа мертвы..");
                 }
