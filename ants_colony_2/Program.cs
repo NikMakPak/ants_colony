@@ -7,16 +7,16 @@ using System.Threading;
 
 namespace ants_colony_2
 {
-    // названия
     /* ресурсы:
      * росинка - Р
      * веточка - В
      * камушек - К
      * листик  - Л
      */
-
-    //TODO:
-    // сделать особое событие
+    abstract class Effect
+    {
+        public Random rand = new Random(DateTime.Now.Millisecond);
+    }
     abstract class Insect
     {
         public int dmg;
@@ -99,14 +99,9 @@ namespace ants_colony_2
                     }
                     else
                     {
-                        //Console.WriteLine("-------------------");
                         Colony c = Global.genColony("", qKid, 12, 9, colony.specialPrototype[0], colony.specialPrototype[0].GetType().Name);
                         c.friendColonies.Add(colony);
                         colony.friendColonies.Add(c);
-                        //Console.WriteLine(qKid.colony);
-                        //c.info();
-                        //c.population();
-                        //Console.WriteLine("-------------------");
                         queenKids.Add(qKid);
                         Console.WriteLine($"--Рождена королева! Основала колонию: {c.color}");
                     }
@@ -176,9 +171,6 @@ namespace ants_colony_2
             Console.WriteLine($"--Новые личинки: {larvaeNumber}");
         }
     }
-
-
-
     class Worker : Insect
     {
         public string[] takeElems;
@@ -217,6 +209,95 @@ namespace ants_colony_2
                         resources[Convert.ToInt32(takeElems[i])] -= 1;
                         groupResources[Convert.ToInt32(takeElems[i])] += 1;
                     }
+                }
+            }
+        }
+
+        // способность мутанта только
+        public void attack(HikingGroup attackingGroup, HikingGroup enemyGroup)
+        {
+            antFight();
+            void antFight(bool flag = false)
+            {
+                List<string> antsExample = enemyGroup.getAntTypes();
+                string antType = antsExample[rand.Next(antsExample.Count)];
+                switch (antType)
+                {
+                    case "Warrior":
+                        List<Warrior> aliveEnemyWar = enemyGroup.warriors.FindAll(x => (x.hp != 0));
+                        if (aliveEnemyWar.Count != 0)
+                        {
+                            Warrior ant = aliveEnemyWar[rand.Next(aliveEnemyWar.Count)];
+                            while (ant.hp != 0 && hp != 0)
+                            {
+                                fight(ant);
+                            }
+                        }
+                        break;
+                    case "Worker":
+                        List<Worker> aliveEnemyWork = enemyGroup.workers.FindAll(x => (x.hp != 0));
+                        if (aliveEnemyWork.Count != 0)
+                        {
+                            aliveEnemyWork[rand.Next(aliveEnemyWork.Count)].subtractHP(1,1);
+                        }
+                        break;
+                    case "Bumblebee":
+                        List<Insect> aliveEnemyB = enemyGroup.special.FindAll(x => (x.GetType().Name == "Bumblebee" && x.hp != 0));
+                        if (aliveEnemyB.Count != 0)
+                        {
+                            Bumblebee enemyB = (Bumblebee)aliveEnemyB[rand.Next(aliveEnemyB.Count)];
+                            enemyB.subtractHP(1,1);
+                        }
+                        break;
+                    case "Cricket":
+                        List<Insect> aliveEnemyC = enemyGroup.special.FindAll(x => (x.GetType().Name == "Cricket" && x.hp != 0));
+                        if (aliveEnemyC.Count != 0)
+                        {
+                            Cricket enemyC = (Cricket)aliveEnemyC[rand.Next(aliveEnemyC.Count)];
+                            enemyC.subtractHP(1,1);
+                            if (rand.Next(10) > 5)
+                            {
+                                counterAttack(enemyC);
+                            }
+                            else
+                            {
+                                enemyC.attackOurs(enemyGroup);
+                            }
+                        }
+                        break;
+                }
+            }
+
+            void counterAttack(Insect counterAttackingAnt)
+            {
+                switch (counterAttackingAnt.type)
+                {
+                    case "обычный сержант":
+                        subtractHP(((Warrior)counterAttackingAnt).biteCount, ((Warrior)counterAttackingAnt).dmg);
+                        break;
+                    case "обычный берсерк":
+                        foreach (var Warrior in attackingGroup.warriors.FindAll(x => (x.hp != 0)))
+                        {
+                            Warrior.subtractHP(((Warrior)counterAttackingAnt).biteCount, ((Warrior)counterAttackingAnt).dmg / 2);
+                        }
+                        counterAttackingAnt.hp = 0;
+                        break;
+                    case "трудолюбивый обычный агрессивный аномальный сонный - Сверчок":
+                        subtractHP(((Cricket)counterAttackingAnt).biteCount, ((Cricket)counterAttackingAnt).dmg);
+                        break;
+                    default:
+                        subtractHP(((Warrior)counterAttackingAnt).biteCount, ((Warrior)counterAttackingAnt).dmg);
+                        break;
+                }
+            }
+            void fight(Warrior enemyAnt)
+            {
+                // сейчас ударяет this ant
+                enemyAnt.subtractHP(1, 1);
+                // сейчас ударяет enemy ant
+                if (enemyAnt.hp != 0)
+                {
+                    counterAttack(enemyAnt);
                 }
             }
         }
@@ -276,7 +357,7 @@ namespace ants_colony_2
                                     }
                                     break;
                                 default:
-                                    if (flag) // этот код работает если атакующий муравей уже определен и производит атаку на 2 - 3 цели. то есть флаг задается в цикле внизу
+                                    if (flag) // этот код работает если атакующий муравей уже определен и производит атаку на 2 - 3 цели. флаг задается в цикле внизу
                                     {
                                         Warrior ant = aliveEnemyWar[rand.Next(aliveEnemyWar.Count)];
                                         while (ant.hp != 0 && hp != 0)
@@ -389,7 +470,6 @@ namespace ants_colony_2
             Console.WriteLine($"--Королева '{colony.queen.name}'");
         }
     }
-
     class Cricket : Insect
     {
         public string[] canTakeResource = { "3", "2" };
@@ -464,9 +544,9 @@ namespace ants_colony_2
             
         }
     }
-
     class Stack
     {
+        public Cicada cicadaOnStack;
         public int number;
         public List<int> stackResources;
         public List<HikingGroup> groupsOnStack = new List<HikingGroup> { };
@@ -488,7 +568,7 @@ namespace ants_colony_2
             }
         }
 
-        public void about()
+        public void about(int day)
         {
             if (!isExhausted)
             {
@@ -497,6 +577,10 @@ namespace ants_colony_2
             else
             {
                 Console.WriteLine($"Куча {number}: истощена");
+            }
+            if (cicadaOnStack!= null)
+            {
+                cicadaOnStack.about(day);
             }
         }
         public HikingGroup getEnemyGroup(HikingGroup attacking, List<HikingGroup> otherGroups)
@@ -527,10 +611,16 @@ namespace ants_colony_2
                 {
                     foreach (var attackingAnt in attackingGroup.warriors)
                     {
-                        // сделать  убийство через зануление хп, а выживших добавлять в новый массив с помощью фильтра по хп!=0 полсе всех драк
                         attackingAnt.attack(attackingGroup,enemyGroup);
                     }
-                    // сделать чистку всех груп от нулевых муравьев перед новым заходом
+
+                    if (cicadaOnStack != null)
+                    {
+                        foreach (var mutantWorker in attackingGroup.workers)
+                        {
+                            mutantWorker.attack(attackingGroup, enemyGroup);
+                        }
+                    }
                 }
             }
             foreach (var group in groupsOnStack)
@@ -665,7 +755,6 @@ namespace ants_colony_2
         public List<int> groupResources = new List<int>{0,0,0,0};
         public Random rand = new Random(DateTime.Now.Millisecond);
         public List<int> losses = new List<int> { 0, 0, 0 };
-        // Р В О
 
         public HikingGroup(Colony colony)
         {
@@ -675,7 +764,6 @@ namespace ants_colony_2
             this.workers = getWorkers();
             this.special = getSpecials();
         }
-        // нужно изменить распределение муравьев! сейчас добавляется огромное количество мини походов
         public List<Warrior> getWarriors()
         {
             int antCount = (colony.warriors.Count != 0) ? rand.Next(colony.warriors.Count) + 1 : rand.Next(colony.warriors.Count);
@@ -933,16 +1021,16 @@ namespace ants_colony_2
             }
             return false;
         }
-       
-        //public int getResourcesSum()
-        //{
-        //    int sum = 0;
-        //    foreach (var item in resources)
-        //    {
-        //        sum += item.Value;
-        //    }
-        //    return sum;
-        //}
+
+        public int getResourcesSum()
+        {
+            int sum = 0;
+            foreach (var item in resources)
+            {
+                sum += item;
+            }
+            return sum;
+        }
         public void antInfo()
         {
             Console.WriteLine("в разработке");
@@ -958,6 +1046,50 @@ namespace ants_colony_2
         {
             losses = new List<int> { 0, 0, 0 };
             gapRes = new List<int> { 0, 0, 0, 0 };
+        }
+    }
+    class Cicada : Effect
+    {
+        public int effectDays = 7, limitDay = 2;
+        public string modifier, type;
+        public bool isAppear = false;
+        public int dayOfAppear;
+
+        public Cicada(string modifier, string type)
+        {
+            this.modifier = modifier;
+            this.type = type;
+        }
+
+        public void about(int day)
+        {
+            Console.WriteLine($"\tГлобальный эффект: <{type}> {modifier} (в течение еще {Math.Abs(day - dayOfAppear) + 1})");
+        }
+
+        public bool willAppear(int day)
+        {
+            if (rand.Next(100)>60 && !isAppear)
+            {
+                isAppear = true;
+                dayOfAppear = day;
+                return true;
+            }
+            return false;
+        }
+
+        public bool isLimitDay(int day)
+        {
+            effectDays -= 1;
+            if (effectDays <= 0 || (Math.Abs(day - dayOfAppear) == limitDay))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void disappear()
+        {
+            isAppear = false;
         }
     }
     class Global
@@ -988,8 +1120,6 @@ namespace ants_colony_2
                 new Worker("старший забывчивый",2,1,0,new string[] {"1","2"},1),
             };
         }
-
-        
 
         static public List<Warrior> getAntsExamples_Warrior(string qName)
         {
@@ -1042,29 +1172,16 @@ namespace ants_colony_2
             colonies.Add(colony);
             return colony;
         }
-        //    Random rand = new Random();
-        //    return rand.Next(start, end + 1);
-
-        //static public int getRndNumber(int start, int end)
-        //{
-        //    //Console.WriteLine(rand.Next(start, end + 1));
-        //}
-        //public static Insect newAnt()
-        //{
-        //    Global.Rand(0, 3);
-        //    return new Worker();
-
-        //}
-
     }
-
     class Program
     {
-
-
         static void Main(string[] args)
         {
             Random rand = new Random(DateTime.Now.Millisecond);
+
+            // глобальный эффект
+            Cicada cicada = new Cicada("появилась на куче и на ней рабочие начинают атаковать врагов", "Аномальная Певчая-цикада");
+            
             // кучи
             // порядок ресурсов: В К Р Л
             Stack k1 = new Stack(1, new int[] { 28, 0, 0, 0 });
@@ -1098,11 +1215,26 @@ namespace ants_colony_2
                 screen4(day);
                 wait(userSec);
                 Console.WriteLine("\n");
-                //screen1(day);
-                //screen2();
             }
+            // итоги
+            results(Global.colonies);
 
             // функции 
+            void results(List<Colony> colonies)
+            {
+                Console.WriteLine("\n\t\t\t\t\t#################");
+                Console.WriteLine($"\t\t\t\t\t  Пришла засуха!");
+                screen1(12, Global.colonies);
+                Dictionary<string, int> maxResColony = new Dictionary<string, int>();
+                foreach (var colony in colonies)
+                {
+                    maxResColony.Add(colony.color, colony.getResourcesSum());
+                    
+                }
+                Console.WriteLine("\n\t\t\t\t\t#################");
+                Console.WriteLine($"\t\t\tВыжила колония '{maxResColony.OrderByDescending(x => x.Value).First().Key}', набравшая суммарно {maxResColony.OrderByDescending(x => x.Value).First().Value}");
+            }
+
             void screen1(int day, List<Colony> colonies)
             {
                 // инфо о колонии
@@ -1113,12 +1245,10 @@ namespace ants_colony_2
                 }
 
                 // инфо о кучах
-                foreach (var item in stacks)
+                foreach (var stack in stacks)
                 {
-                    item.about();
+                    stack.about(day);
                 }
-                Console.WriteLine(" Глоб эфект в разрабе..");
-                // глобальный эфект
             }
             void screen2(string color)
             {
@@ -1168,6 +1298,11 @@ namespace ants_colony_2
                 //на куче
                 foreach (var stack in stacks)
                 {
+                    // глобальный эффект появление
+                    if (cicada.willAppear(day))
+                    {
+                        stack.cicadaOnStack = cicada;
+                    }
                     stack.antsFight();
                     stack.antsTake(day);
                 }
@@ -1197,6 +1332,14 @@ namespace ants_colony_2
                 }
                 foreach (var stack in stacks)
                 {
+                    if (stack.cicadaOnStack != null)
+                    {
+                        if (stack.cicadaOnStack.isLimitDay(day))
+                        {
+                            stack.cicadaOnStack.disappear();
+                            stack.cicadaOnStack = null;
+                        }
+                    }
                     stack.cleanGroups();
                 }
             }
@@ -1280,19 +1423,6 @@ namespace ants_colony_2
                     }
                     Console.WriteLine();
                     wait(userSec);
-
-                    
-                    //string userColonyColor = Console.ReadLine();
-                    //if (userColonyColor == "0")
-                    //{
-                    //    wait();
-                    //    break;
-                    //}
-
-                    //wait();
-                    //screen2(userColonyColor);
-                    //wait();
-                    //screen3Manager(userColonyColor);
                 }
             }
 
@@ -1308,36 +1438,6 @@ namespace ants_colony_2
             {
                 Thread.Sleep(sec);
             }
-
-            
-            //Console.WriteLine("++++++до");
-            //k3.about();
-            //colony1.workers[12].takeResource(k3.stackResources);
-            //colony1.workers[12].about();
-            //k3.about();
-            //List<Insect> insects = new List<Insect> { colony1.warriors[0] };
-            //insects[0].hp -= 1;
-            //Warrior w = (Warrior)insects[0];
-            //w.about();
-            // результаты
-            //foreach (var colony in Global.colonies)
-            //{
-            //    Console.WriteLine(colony.queen.name);
-            //    Console.WriteLine(colony.color);
-            //    colony.population();
-            //}
-            Console.WriteLine(" пришла засуха! ");
-            /*
-            //q1.colony = colony1;
-            //q1.genAnt();
-            //colony1.Info();
-            Stack st1 = new Stack(1, new int[] { 0, 0, 1 });
-            st1.About();
-            q1.About();
-            Console.WriteLine(Rand(q1.growthCycle[0], q1.growthCycle[1]));
-            colony.population["рабочих"] += 1;
-            Console.WriteLine(colony.population["рабочих"]); 
-            */
 
         }
     }
